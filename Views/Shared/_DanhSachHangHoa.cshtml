@@ -1,0 +1,21 @@
+﻿@{
+	Layout = "_LayoutCustomer";
+}
+
+
+<!-- Single Page Header start -->
+@RenderSection("BreadCum", required: false)
+<!-- Single Page Header End -->
+<!-- Fruits Shop Start-->
+<div class="container-fluid fruite py-5">
+	<div class="container py-5">
+		<div class="row g-4">
+			<div class="col-lg-12">
+				<div class="row g-4 justify-content-center">
+					@RenderBody()
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Fruits Shop End-->
