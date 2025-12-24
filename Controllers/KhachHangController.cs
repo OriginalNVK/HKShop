@@ -16,7 +16,7 @@ namespace HKShop.Controllers
         // private readonly IMapper _mapper;
         private readonly DBContext db;
 
-        public KhachHangController(DBContext context, IMapper mapper)
+        public KhachHangController(DBContext context)
         {
             // _mapper = mapper;
             db = context;
@@ -48,20 +48,25 @@ namespace HKShop.Controllers
                         Email = model.Email
                     };
                     var NguoiDung = new NguoiDung();
+                    NguoiDung.TenDangNhap = model.TenDangNhap;
+                    NguoiDung.NgayTao = DateTime.Now;
                     NguoiDung.RandomKey = Utils.GenerateRandomKey();
                     NguoiDung.MatKhau = model.MatKhau.ToMd5Hash(NguoiDung.RandomKey);
                     NguoiDung.HieuLuc = true; // sẽ xử lý khi dùng mail để active
-                    NguoiDung.VaiTro = 0;
 
                     if (Hinh != null)
                     {
                         KhachHang.Hinh = Utils.UpLoadHinh(Hinh, "KhachHang");
                     }
-
-                    await db.KhachHangs.AddAsync(KhachHang);
                     await db.NguoiDungs.AddAsync(NguoiDung);
                     await db.SaveChangesAsync();
-                    return RedirectToAction("Index", "HangHoa");
+
+                    // Gán UserId cho KhachHang sau khi NguoiDung đã được lưu
+                    KhachHang.UserId = NguoiDung.Id;
+
+                    await db.KhachHangs.AddAsync(KhachHang);
+                    await db.SaveChangesAsync();
+                    return Redirect("/");
                 }
                 catch (Exception ex)
                 {

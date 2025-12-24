@@ -103,11 +103,11 @@
                         </div>
                         <!-- /LOGO -->
                         <!-- SEARCH BAR -->
-                        @* <div class="col-md-6 d-md-none">
+                        <div class="col-md-6 d-md-none">
                             <div class="header-search">
-                                @await Component.InvokeAsync("MenuLoai")
+                                @* @await Component.InvokeAsync("MenuLoai") *@
                             </div>
-                        </div> *@
+                        </div>
                         <!-- /SEARCH BAR -->
                         <!-- ACCOUNT -->
                         <div class="col-md-3 clearfix">
@@ -143,15 +143,15 @@
         </header>
         <!-- /HEADER -->
         <!-- NAVIGATION -->
-        @* <nav id="navigation">
+        <nav id="navigation">
             <!-- container -->
             <div class="container">
                 <!-- responsive-nav -->
-                @await Component.InvokeAsync("Category")
+                @* @await Component.InvokeAsync("Category") *@
                 <!-- /responsive-nav -->
             </div>
             <!-- /container -->
-        </nav> *@
+        </nav>
         <!-- /NAVIGATION -->
         <div style="min-height: 400px;" class="hero-header">
             @RenderBody()
