@@ -15,11 +15,13 @@ namespace HKShop.Controllers
     {
         // private readonly IMapper _mapper;
         private readonly DBContext db;
+        private readonly IGenerateToken _generateToken;
 
-        public KhachHangController(DBContext context)
+        public KhachHangController(DBContext context, IGenerateToken generateToken)
         {
             // _mapper = mapper;
             db = context;
+            _generateToken = generateToken;
         }
 
         #region Đăng ký 
@@ -122,10 +124,16 @@ namespace HKShop.Controllers
                                 //new Claim(ClaimTypes.Role, "Customer")
                             };
 
-                            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-                            await HttpContext.SignInAsync(claimsPrincipal);
+                            var jwtToken = _generateToken.GenerateJwtToken(claims);
+                            Response.Cookies.Append("JwtToken", jwtToken, new CookieOptions
+                            {
+                                HttpOnly = true,
+                                Secure = true,
+                                SameSite = SameSiteMode.Strict,
+                                Expires = DateTimeOffset.Now.AddMinutes(double.Parse(
+                                    HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Jwt:ExpireTimespan"] ?? "60")),
+                                Path = "/"
+                            });
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 return Redirect(returnUrl);
@@ -136,6 +144,7 @@ namespace HKShop.Controllers
                                 {
                                     0 => Redirect("/"),
                                     1 => Redirect("/admin"),
+                                    _ => Redirect("/")
                                 };
                             }
                         }
@@ -155,7 +164,7 @@ namespace HKShop.Controllers
         [Authorize]
         public async Task<IActionResult> DangXuat()
         {
-            await HttpContext.SignOutAsync();
+            Response.Cookies.Delete("JwtToken");
             return Redirect("/");
         }
     }

@@ -1,6 +1,8 @@
+using HKShop.Helpers;
 using HKShop.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,14 +11,38 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<DBContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("HKShop")));
 
-// Cấu hình Authentication với Cookie
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+// Cấu hình Authentication với JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.LoginPath = "/KhachHang/DangNhap";
-        options.AccessDeniedPath = "/Home/PageNotFound";
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured")))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // Lấy token từ cookie
+            var token = context.Request.Cookies["JwtToken"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddScoped<IGenerateToken, GenerateToken>();
 
 var app = builder.Build();
 

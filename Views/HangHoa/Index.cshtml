@@ -1,0 +1,9 @@
+﻿@model IEnumerable<HKShop.DTOs.HangHoaResponse>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "_DanhSachHangHoa";
+}
+
+@await Html.PartialAsync("ProductItem", Model)
+
