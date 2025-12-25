@@ -8,7 +8,7 @@ namespace HKShop.DTOs
         [Display(Name = "Tên đăng nhập")]
         [Required(ErrorMessage = "*")]
         [MaxLength(20, ErrorMessage = "Tối đa 20 ký tự")]
-        public string TenDangNhap { get; set; }
+        public string TenDangNhap { get; set; } = null!;
 
         [Display(Name = "Mật khẩu")]
         [Required(ErrorMessage = "*")]
@@ -27,16 +27,16 @@ namespace HKShop.DTOs
 
         [MaxLength(60, ErrorMessage = "Tối đa là 60 ký tự")]
         [Display(Name = "Địa chỉ")]
-        public string DiaChi { get; set; }
+        public string DiaChi { get; set; } = null!;
 
         [MaxLength(24, ErrorMessage = "Tối đa là 24 ký tự")]
         [RegularExpression(@"0\d{9}", ErrorMessage = "Sai định dạng SĐT VN")]
         [Display(Name = "Điện thoại")]
-        public string DienThoai { get; set; }
+        public string DienThoai { get; set; } = null!;
 
         [EmailAddress(ErrorMessage = "Sai định dạng email")]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
 
         public string? Hinh { get; set; }
     }
