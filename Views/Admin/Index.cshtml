@@ -1,0 +1,24 @@
+﻿@model HKShop.DTOs.ThongKeVM;
+
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewBag.Title = "Dashboard";
+}
+<div class="d-flex">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Số lượng đơn hàng</h5>
+                <p class="card-text">@Model.SlDonHang</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Số lượng hàng hóa</h5>
+                <p class="card-text">@Model.SlHangHoa</p>
+            </div>
+        </div>
+    </div>
+</div>

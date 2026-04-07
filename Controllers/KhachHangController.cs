@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using HKShop.DTOs;
+using System.Reflection.Metadata;
 
 namespace HKShop.Controllers
 {
@@ -17,11 +18,14 @@ namespace HKShop.Controllers
         private readonly DBContext db;
         private readonly IGenerateToken _generateToken;
 
-        public KhachHangController(DBContext context, IGenerateToken generateToken)
+        private readonly ICloudinaryService _cloudinaryService;
+
+        public KhachHangController(DBContext context, IGenerateToken generateToken, ICloudinaryService cloudinaryService)
         {
             // _mapper = mapper;
             db = context;
             _generateToken = generateToken;
+            _cloudinaryService = cloudinaryService;
         }
 
         #region Đăng ký 
@@ -58,7 +62,7 @@ namespace HKShop.Controllers
 
                     if (Hinh != null)
                     {
-                        KhachHang.Hinh = Utils.UpLoadHinh(Hinh, "KhachHang");
+                        KhachHang.Hinh = await _cloudinaryService.UploadImageAsync(Hinh, Constants.FOLDER_CLOUDINARY_CUSTOMER);
                     }
                     await db.NguoiDungs.AddAsync(NguoiDung);
                     await db.SaveChangesAsync();
@@ -119,7 +123,7 @@ namespace HKShop.Controllers
                                 new Claim(ClaimTypes.Name, khachHang.HoTen),
                                 new Claim(Constants.CLAIM_CUSTOMERID, khachHang.MaKh),
                                 new Claim(ClaimTypes.Role, NguoiDung.VaiTro.ToString()),
-                                new Claim("Avatar", khachHang.Hinh),
+                                new Claim("Avatar", khachHang.Hinh??""),
                                 ////claim role - động
                                 //new Claim(ClaimTypes.Role, "Customer")
                             };
