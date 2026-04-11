@@ -48,7 +48,7 @@ namespace HKShop.Controllers
                 MoTaDonVi = product.MoTaDonVi,
                 DonGia = product.DonGia,
                 Hinh = product.Hinh,
-                NgaySx = DateTime.Parse(product.NgaySx.ToString()),
+                NgaySx = product.NgaySx,
                 GiamGia = product.GiamGia,
                 LuotMua = product.LuotMua,
                 MoTa = product.MoTa,
@@ -86,7 +86,7 @@ namespace HKShop.Controllers
                     MaLoai = hangHoa.MaLoai ?? 0,
                     MoTaDonVi = hangHoa.MoTaDonVi,
                     DonGia = hangHoa.DonGia,
-                    NgaySx = DateOnly.Parse(hangHoa.NgaySx.ToString()),
+                    NgaySx = DateOnly.FromDateTime(hangHoa.NgaySx),
                     GiamGia = hangHoa.GiamGia,
                     LuotMua = hangHoa.LuotMua,
                     MoTa = hangHoa.MoTa,
@@ -140,13 +140,13 @@ namespace HKShop.Controllers
                 MoTaDonVi = product.MoTaDonVi,
                 DonGia = product.DonGia,
                 Hinh = product.Hinh,
-                NgaySx = DateTime.Parse(product.NgaySx.ToString()),
+                NgaySx = product.NgaySx,
                 GiamGia = product.GiamGia,
                 LuotMua = product.LuotMua,
                 MoTa = product.MoTa,
                 MaLoaiNavigation = product.MaLoaiNavigation,
             };
-            ViewData["MaLoai"] = new SelectList(db.Loais, "MaLoai", "MaLoai", product.MaLoai);
+            ViewData["MaLoai"] = new SelectList(db.Loais, "Maloai", "Tenloai", product.MaLoai);
             return View(ProductDTO);
         }
 
@@ -174,7 +174,7 @@ namespace HKShop.Controllers
                 {
                     existingProduct.Hinh = await _cloudinaryService.UploadImageAsync(product.Hinh, Constants.FOLDER_CLOUDINARY_PRODUCT);
                 }
-                existingProduct.NgaySx = DateOnly.Parse(product.NgaySx.ToString());
+                existingProduct.NgaySx = DateOnly.FromDateTime(product.NgaySx);
                 existingProduct.GiamGia = product.GiamGia;
                 existingProduct.LuotMua = product.LuotMua;
                 existingProduct.MoTa = product.MoTa;

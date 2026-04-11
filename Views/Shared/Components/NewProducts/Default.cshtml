@@ -35,7 +35,7 @@
 										<div class="product">
 											<div class="product-img">
 												<a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@product.MaHh">
-													<img src="~/Hinh/HangHoa/@product.Hinh" class="img-fluid w-small" alt="@product.TenHH">
+													<img src="@product.Hinh" class="img-fluid w-small" alt="@product.TenHH">
 												</a>
 												@if (product.GiamGia > 0)
 												{

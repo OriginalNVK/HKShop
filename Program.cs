@@ -55,7 +55,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // ✅ QUAN TRỌNG cho wwwroot
+app.UseStaticFiles(); 
 
 app.UseRouting();
 

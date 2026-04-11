@@ -18,7 +18,7 @@ namespace HKShop.DTOs
 
         public string? Hinh { get; set; }
 
-        public DateTime NgaySx { get; set; }
+        public DateOnly NgaySx { get; set; }
 
         public decimal GiamGia { get; set; }
 

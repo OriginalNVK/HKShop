@@ -3,6 +3,19 @@
 	Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 	ViewBag.Title = "Product Management";
 }
+<style>
+	#hoaDonTable tbody td {
+		vertical-align: middle !important;
+	}
+
+	#hoaDonTable tbody .product-image {
+		display: block;
+		width: 100px;
+		height: 110px;
+		margin: 0 auto;
+		object-fit: cover;
+	}
+</style>
 <div class="card">
 	<div class="flex-between mb-2 flex-sm-column">
 		<div>
@@ -53,14 +66,16 @@
 				<tbody>
 					@foreach (var item in Model)
 					{
-						<tr>
-							<td class="text-center">@item.MaHh</td>
-							<td class="text-center"><img src="~/Hinh/HangHoa/@item.Hinh" alt="@item.TenHH" width="100" height="110"></td>
-							<td class="text-center">@item.TenHH</td>
-							<td class="text-center">@item.TenLoai</td>
-							<td class="text-center">@item.DonGia</td>
-							<td class="text-center">@item.GiamGia</td>
-							<td class="text-center">
+						<tr class="align-middle">
+							<td class="text-center align-middle">@item.MaHh</td>
+							<td class="text-center align-middle">
+								<img src="@item.Hinh" alt="@item.TenHH" class="product-image">
+							</td>
+							<td class="text-center align-middle">@item.TenHH</td>
+							<td class="text-center align-middle">@item.TenLoai</td>
+							<td class="text-center align-middle">@item.DonGia</td>
+							<td class="text-center align-middle">@item.GiamGia</td>
+							<td class="text-center align-middle">
 								<div class="btn-group flex-center gap-2" role="group">
 									<a asp-action="Detail" asp-controller="Products" asp-route-id="@item.MaHh"
 									   class="btn btn-sm btn-info" title="Xem chi tiết">

@@ -1,13 +1,13 @@
-﻿@model HKShop.DTOs.ProductsRequest
+﻿@model HKShop.DTOs.ProductsResponse
 @{
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    ViewBag.Title = "Cập nhật hàng hóa";
+    ViewBag.Title = "Update Product";
 }
 
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3 pb-4">
-            <h2 class="m-0 font-weight-bold text-center">Cập nhật hàng hóa @Model.TenHh</h2>
+            <h2 class="m-0 font-weight-bold text-center">Update Product @Model.TenHh</h2>
         </div>
         <div class="card-body mt-4">
             <form asp-action="Edit">

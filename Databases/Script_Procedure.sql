@@ -7,6 +7,19 @@ CREATE PROC proc_changeImageLink
 AS
 BEGIN
 	SET NOCOUNT ON;
-	SET @link = 'https://res.cloudinary.com/dst6r1cf6/image/upload/v1766442447/' + @name
+	IF @name IS NULL OR LTRIM(RTRIM(@name)) = ''
+	BEGIN
+		SET @link = NULL;
+		RETURN;
+	END
+
+	IF @name LIKE 'http://%' OR @name LIKE 'https://%'
+	BEGIN
+		SET @link = @name;
+	END
+	ELSE
+	BEGIN
+		SET @link = 'https://res.cloudinary.com/dst6r1cf6/image/upload/' + @name;
+	END
 END
 

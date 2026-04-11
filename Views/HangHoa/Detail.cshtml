@@ -27,7 +27,7 @@
                 <div id="product-main-img">
                     <div class="product-preview">
                         <a asp-action="Detail" asp-route-id="@Model.MaHH">
-                            <img src="~/Hinh/HangHoa/@Model.Hinh" alt="@Model.TenHH">
+                            <img src="@Model.Hinh" alt="@Model.TenHH">
                         </a>
                     </div>
                 </div>
@@ -37,7 +37,7 @@
             <div class="col-md-2 col-md-pull-5">
                 <div id="product-imgs">
                     <div class="product-preview">
-                        <img src="~/Hinh/HangHoa/@Model.Hinh" alt="@Model.TenHH">
+                        <img src="@Model.Hinh" alt="@Model.TenHH">
                     </div>
                     <!-- Add more previews if you have additional images -->
                 </div>
