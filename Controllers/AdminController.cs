@@ -97,55 +97,63 @@ namespace HKShop.Controllers
         [Route("/admin/clients")]
         public async Task<IActionResult> Clients(int pageNumber = 1, int pageSize = 5, int? VaiTro = null)
         {
-        	// Lọc theo VaiTro nếu có
-        	var query = db.KhachHangs.AsQueryable();
+            // Join KhachHang + NguoiDung để lấy thông tin hồ sơ và quyền từ 2 bảng riêng.
+            var query = db.KhachHangs.AsNoTracking()
+                .Join(
+                    db.NguoiDungs.AsNoTracking(),
+                    kh => kh.UserId,
+                    nd => nd.Id,
+                    (kh, nd) => new ClientResponse
+                    {
+                        MaKH = kh.MaKh,
+                        HoTen = kh.HoTen,
+                        Hinh = kh.Hinh,
+                        GioiTinh = kh.GioiTinh,
+                        NgaySinh = kh.NgaySinh,
+                        DienThoai = kh.DienThoai,
+                        DiaChi = kh.DiaChi,
+                        Email = kh.Email,
+                        VaiTro = nd.VaiTro,
+                        MatKhau = nd.MatKhau
+                    });
 
-        	if (VaiTro.HasValue)
-        	{
-        		query = query.Where(c => c.VaiTro == VaiTro.Value);
-        	}
+            if (VaiTro.HasValue)
+            {
+                query = query.Where(c => c.VaiTro == VaiTro.Value);
+            }
 
-        	// Phân trang
-        	var pagedList = await query
-        		.Select(c => new ClientResponse
-        		{
-                    MaKH = c.MaKh,
-        			HoTen = c.HoTen,
-        			Hinh = c.Hinh,
-                    GioiTinh = c.GioiTinh,
-                    NgaySinh = c.NgaySinh,
-                    DienThoai = c.DienThoai,
-                    DiaChi = c.DiaChi,
-                    Email = c.Email,
-        		})
-        		.Skip((pageNumber - 1) * pageSize)
-        		.Take(pageSize)
-        		.ToListAsync();
+            var totalCount = await query.CountAsync();
 
-        	// Lấy danh sách các VaiTro duy nhất
-        	var uniqueRoles = await db.KhachHangs
-        		.Select(c => c.VaiTro)
-        		.Distinct()
-        		.ToListAsync();
+            // Phân trang
+            var pagedList = await query
+                .OrderBy(c => c.MaKH)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
-        	ViewBag.Roles = uniqueRoles;
-        	ViewBag.PageNumber = pageNumber;
-        	ViewBag.PageSize = pageSize;
-        	ViewBag.TotalCount = await query.CountAsync();
+            // Lấy danh sách các VaiTro duy nhất
+            var uniqueRoles = await db.NguoiDungs
+                .Select(c => c.VaiTro)
+                .Distinct()
+                .ToListAsync();
 
-        	return View(pagedList);
+            ViewBag.Roles = uniqueRoles;
+            ViewBag.PageNumber = pageNumber;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+
+            return View(pagedList);
         }
 
         [Route("/admin/categories")]
         public async Task<IActionResult> Categories()
         {
-            var ListCategories = db.Loais.AsQueryable();
-            var result = await ListCategories.Select(c => new CategoryResponse
+            var result = await db.Loais.Select(c => new CategoryResponse
             {
-                MaLoai = c.MaLoai,
-                TenLoai = c.TenLoai,
-                TenLoaiAlias = c.TenLoaiAlias,
-                MoTa = c.MoTa,
+                MaLoai = c.Maloai,
+                TenLoai = c.Tenloai,
+                TenLoaiAlias = c.Tenloaialias,
+                MoTa = c.Mota,
                 Hinh = c.Hinh,
             }).ToListAsync();
             return View(result);

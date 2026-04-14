@@ -1,24 +1,24 @@
-﻿@model IEnumerable<HShop.DTOs.CategoryResponse>
+﻿@model IEnumerable<HKShop.DTOs.CategoryResponse>
 
 @{
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    ViewBag.Title = "Quản lý loại hàng hóa";
+    ViewBag.Title = "Category Management";
 }
 <div class="card">
     <div class="card-header">
-        <h4 class="mb-0 text-center" style="font-size: 20px">Danh sách loại hàng hóa</h4>
+        <h4 class="mb-0 text-center" style="font-size: 20px">List of Product Categories</h4>
     </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-striped table-hover" id="hoaDonTable">
                 <thead class="thead-dark">
                     <tr>
-                        <th class="text-center">Mã loại</th>
-                        <th class="text-center">Ảnh minh họa</th>
-                        <th class="text-center">Tên loại</th>
-                        <th class="text-center">Tên alias</th>
-                        <th class="text-center">Mô tả</th>
-                        <th class="text-center">Thao tác</th>
+                        <th class="text-center">Category ID</th>
+                        <th class="text-center">Thumbnail</th>
+                        <th class="text-center">Category Name</th>
+                        <th class="text-center">Alias Name</th>
+                        <th class="text-center">Description</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,7 +33,7 @@
                             <td class="text-center">
                                 <div class="btn-group d-flex justify-center gap-2" role="group">
                                     <a asp-action="Delete" asp-controller="Categories" asp-route-id="@item.MaLoai"
-                                       class="btn btn-sm btn-delete" title="Xóa loai">
+                                       class="btn btn-sm btn-delete" title="Delete category">
                                         <i class="fa fa-trash"></i>
                                     </a>
                                 </div>
@@ -54,7 +54,7 @@
                 var deleteUrl = $(this).attr('href'); // Lấy URL từ thẻ a
 
                 // Hiển thị hộp thoại confirm
-                if (confirm('Bạn có chắc chắn muốn xóa loại hàng hóa này?')) {
+                if (confirm('Do you want to delete this category?')) {
                     window.location.href = deleteUrl; // Chuyển hướng nếu đồng ý
                 }
             });

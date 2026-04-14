@@ -44,6 +44,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<IGenerateToken, GenerateToken>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddAutoMapper(
+    _ => { },
+    typeof(HKShop.Helpers.AutoMapper).Assembly);
 
 var app = builder.Build();
 
@@ -55,7 +58,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); 
+app.UseStaticFiles();
 
 app.UseRouting();
 

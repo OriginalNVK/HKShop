@@ -8,7 +8,8 @@ namespace HKShop.Helpers
     {
         public AutoMapper()
         {
-
+            CreateMap<ClientRequest, KhachHang>();
+            CreateMap<NguoiDung, ClientRequest>();
         }
     }
 }
