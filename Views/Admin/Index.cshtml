@@ -1,24 +1,129 @@
-﻿@model HKShop.DTOs.ThongKeVM;
+﻿@model HKShop.DTOs.OverviewDTO;
+@using System.Text.Json
 
 @{
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     ViewBag.Title = "Dashboard";
 }
-<div class="d-flex">
-    <div class="col-md-6">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Số lượng đơn hàng</h5>
-                <p class="card-text">@Model.SlDonHang</p>
+
+<div class="container-fluid px-0">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div style="position: relative; height: 300px;">
+                <canvas id="customerCreatedChart"
+                        role="img"
+                        aria-label="Bar chart showing number of new customers over the last 7 days">
+                </canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Số lượng hàng hóa</h5>
-                <p class="card-text">@Model.SlHangHoa</p>
+    <div class="row mb-3">
+        <div class="col-12">
+            <div style="position: relative; height: 300px;">
+                <canvas id="orderByDateChart"
+                        role="img"
+                        aria-label="Bar chart showing number of orders over the last 14 days">
+                </canvas>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const khachHangTheoNgay = @Html.Raw(JsonSerializer.Serialize(Model.CustomerIn7Day));
+        const donHangTheoNgay   = @Html.Raw(JsonSerializer.Serialize(Model.OrderIn14Day));
+
+        function formatDateStr(dateStr) {
+            const d  = new Date(dateStr);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            return `${dd}/${mm}`;
+        }
+
+        function baseOptions(titleText, xLabel, yLabel) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 500, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: titleText,
+                        color: '#374151',
+                        font: { size: 13, weight: '600' },
+                        padding: { bottom: 8 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17,24,39,0.85)',
+                        titleFont: { size: 11 },
+                        bodyFont:  { size: 11 },
+                        padding: 8,
+                        cornerRadius: 6
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: {
+                            color: '#6b7280',
+                            font: { size: 11 },
+                            maxRotation: 0,
+                            autoSkip: false
+                        },
+                        title: { display: true, text: xLabel, color: '#9ca3af', font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, color: '#9ca3af', font: { size: 11 } },
+                        grid: { color: 'rgba(156,163,175,0.15)' },
+                        border: { display: false },
+                        title: { display: true, text: yLabel, color: '#9ca3af', font: { size: 11 } }
+                    }
+                },
+                layout: { padding: { top: 4, right: 12 } }
+            };
+        }
+
+        // ── Chart 1: Customer Overview ────────────────────────────────────────
+        const customerCtx = document.getElementById('customerCreatedChart').getContext('2d');
+
+        new Chart(customerCtx, {
+            type: 'bar',
+            data: {
+                labels: khachHangTheoNgay.map(x => formatDateStr(x.Date)),
+                datasets: [{
+                    label: 'Customers',
+                    data: khachHangTheoNgay.map(x => x.Amount),
+                    backgroundColor: '#3b82f6',
+                    borderRadius: { topLeft: 4, topRight: 4 },
+                    borderSkipped: false,
+                    barThickness: 32
+                }]
+            },
+            options: baseOptions('Customer Overview', 'Date', 'Number of Customers')
+        });
+
+        // ── Chart 2: Orders in 14 Days ────────────────────────────────────────
+        const orderCtx = document.getElementById('orderByDateChart').getContext('2d');
+
+        new Chart(orderCtx, {
+            type: 'bar',
+            data: {
+                labels: donHangTheoNgay.map(x => formatDateStr(x.Date)),
+                datasets: [{
+                    label: 'Orders',
+                    data: donHangTheoNgay.map(x => x.Amount),
+                    backgroundColor: '#ef4444',
+                    borderRadius: { topLeft: 4, topRight: 4 },
+                    borderSkipped: false,
+                    barThickness: 32
+                }]
+            },
+            options: baseOptions('Number of Orders in 14 Days', 'Date', 'Number of Orders')
+        });
+    </script>
+}

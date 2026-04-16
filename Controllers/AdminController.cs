@@ -19,12 +19,56 @@ namespace HKShop.Controllers
         [Route("/admin")]
         public async Task<IActionResult> Index()
         {
-            var slDonHang = await db.HoaDons.CountAsync();
-            var slHangHoa = await db.HangHoas.CountAsync();
-            var result = new ThongKeVM
+
+            var today = DateTime.Today;
+
+            var start7Days = today.AddDays(-6);
+            var endTomorrow = today.AddDays(1);
+            var customerCreatedByDate = await db.KhachHangs
+                .AsNoTracking()
+                .Join(
+                    db.NguoiDungs.AsNoTracking(),
+                    kh => kh.UserId,
+                    nd => nd.Id,
+                    (_, nd) => nd.NgayTao.Date
+                )
+                .Where(d => d >= start7Days && d < endTomorrow)
+                .GroupBy(d => d)
+                .Select(g => new { Date = g.Key, Amount = g.Count() })
+                .ToListAsync();
+
+            var customerCreatedLookup = customerCreatedByDate.ToDictionary(x => x.Date, x => x.Amount);
+            var CustomerIn7Day = Enumerable.Range(0, 7)
+                .Select(i => start7Days.AddDays(i))
+                .Select(ngay => new CustomerOrOrderOverview
+                {
+                    Date = DateOnly.FromDateTime(ngay),
+                    Amount = customerCreatedLookup.TryGetValue(ngay, out var soLuong) ? soLuong : 0
+                })
+                .ToList();
+
+            var start7DaysOrder = today.AddDays(-6);
+            var NumberOfOrders = await db.HoaDons
+                .AsNoTracking()
+                .Where(hd => hd.NgayDat >= start7DaysOrder && hd.NgayDat < endTomorrow)
+                .GroupBy(hd => hd.NgayDat.Date)
+                .Select(g => new { Ngay = g.Key, SoLuong = g.Count() })
+                .ToListAsync();
+
+            var donHangLookup = NumberOfOrders.ToDictionary(x => x.Ngay, x => x.SoLuong);
+            var donHangTheoNgay14 = Enumerable.Range(0, 7)
+                .Select(i => start7DaysOrder.AddDays(i))
+                .Select(ngay => new CustomerOrOrderOverview
+                {
+                    Date = DateOnly.FromDateTime(ngay),
+                    Amount = donHangLookup.TryGetValue(ngay, out var soLuong) ? soLuong : 0
+                })
+                .ToList();
+
+            var result = new OverviewDTO
             {
-                SlDonHang = slDonHang,
-                SlHangHoa = slHangHoa
+                CustomerIn7Day = CustomerIn7Day,
+                OrderIn14Day = donHangTheoNgay14,
             };
             return View(result);
         }
