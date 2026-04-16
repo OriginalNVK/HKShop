@@ -24,9 +24,9 @@ namespace HKShop.DTOs
         public DateTime NgaySx { get; set; }
 
         [Range(0, 100)]
-        public decimal GiamGia { get; set; }
+        public decimal? GiamGia { get; set; }
 
-        public int LuotMua { get; set; }
+        public int? LuotMua { get; set; }
 
         public string? MoTa { get; set; }
         public virtual Loai? MaLoaiNavigation { get; set; }

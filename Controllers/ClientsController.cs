@@ -38,10 +38,25 @@ namespace HKShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateUser(ClientRequest client, IFormFile? image)
         {
+            if (string.IsNullOrWhiteSpace(client.MatKhau))
+            {
+                TempData[ToastMessage] = "Password is required";
+                TempData[ToastType] = ToastTypeError;
+                return RedirectToAction("Create");
+            }
+
             var clientExist = await db.KhachHangs.FirstOrDefaultAsync(k => k.MaKh == client.MaKH);
             if (clientExist != null)
             {
                 TempData[ToastMessage] = "User already exists";
+                TempData[ToastType] = ToastTypeError;
+                return RedirectToAction("Create");
+            }
+
+            var accountExists = await db.NguoiDungs.AnyAsync(u => u.TenDangNhap == client.MaKH);
+            if (accountExists)
+            {
+                TempData[ToastMessage] = "Username already exists";
                 TempData[ToastType] = ToastTypeError;
                 return RedirectToAction("Create");
             }
@@ -54,20 +69,33 @@ namespace HKShop.Controllers
             }
             try
             {
-                var userInfo = _mapper.Map<User>(client);
+                var userInfo = _mapper.Map<NguoiDung>(client);
                 var clientInfo = _mapper.Map<KhachHang>(client);
+
+                userInfo.TenDangNhap = client.MaKH;
+                userInfo.NgayTao = DateTime.Now;
                 userInfo.RandomKey = Utils.GenerateRandomKey();
                 userInfo.MatKhau = client.MatKhau.ToMd5Hash(userInfo.RandomKey);
                 userInfo.HieuLuc = true; // sẽ xử lý khi dùng mail để active
+                userInfo.VaiTro = client.VaiTro;
 
                 if (image != null)
                 {
                     clientInfo.Hinh = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_CUSTOMER);
                 }
 
-                await db.KhachHangs.AddAsync(clientInfo);
-                await db.Users.AddAsync(userInfo);
+                await using var transaction = await db.Database.BeginTransactionAsync();
+
+                await db.NguoiDungs.AddAsync(userInfo);
                 await db.SaveChangesAsync();
+
+                clientInfo.UserId = userInfo.Id;
+
+                await db.KhachHangs.AddAsync(clientInfo);
+                await db.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
                 TempData[ToastMessage] = "Create user successfully";
                 TempData[ToastType] = ToastTypeSuccess;
                 return Redirect("/admin/clients");

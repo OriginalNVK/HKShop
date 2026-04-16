@@ -34,7 +34,13 @@ public partial class DBContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=HKShop");
+    {
+        // Keep DI configuration from Program.cs as the source of truth.
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Name=ConnectionStrings:HKShop");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

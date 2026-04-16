@@ -87,8 +87,8 @@ namespace HKShop.Controllers
                     MoTaDonVi = hangHoa.MoTaDonVi,
                     DonGia = hangHoa.DonGia,
                     NgaySx = DateOnly.FromDateTime(hangHoa.NgaySx),
-                    GiamGia = hangHoa.GiamGia,
-                    LuotMua = hangHoa.LuotMua,
+                    GiamGia = hangHoa.GiamGia ?? 0,
+                    LuotMua = hangHoa.LuotMua ?? 0,
                     MoTa = hangHoa.MoTa,
                 };
                 // Xử lý lưu ảnh
@@ -175,8 +175,8 @@ namespace HKShop.Controllers
                     existingProduct.Hinh = await _cloudinaryService.UploadImageAsync(product.Hinh, Constants.FOLDER_CLOUDINARY_PRODUCT);
                 }
                 existingProduct.NgaySx = DateOnly.FromDateTime(product.NgaySx);
-                existingProduct.GiamGia = product.GiamGia;
-                existingProduct.LuotMua = product.LuotMua;
+                existingProduct.GiamGia = product.GiamGia ?? 0;
+                existingProduct.LuotMua = product.LuotMua ?? 0;
                 existingProduct.MoTa = product.MoTa;
 
                 // Cập nhật và lưu thay đổi

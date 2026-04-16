@@ -12,7 +12,7 @@ namespace HKShop.DTOs
 
         public bool GioiTinh { get; set; }
 
-        public DateTime NgaySinh { get; set; }
+        public DateOnly NgaySinh { get; set; }
 
         public string? DiaChi { get; set; }
 

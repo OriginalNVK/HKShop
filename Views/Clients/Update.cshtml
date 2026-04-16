@@ -1,4 +1,4 @@
-﻿@model HKShop.DTOs.ClientRequest
+﻿@model HKShop.DTOs.ClientResponse
 @{
 	Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 	ViewBag.Title = "Update User Information";
@@ -76,7 +76,7 @@
 						<input asp-for="Hinh" class="custom-file-input" id="customFile" type="file">
 					</div>
 					<span asp-validation-for="Hinh" class="text-danger small"></span>
-					<img src="~/Hinh/KhachHang/@Model.Hinh" alt="Current Image" class="img-thumbnail" style="max-height: 150px;" />
+					<img src="@Model.Hinh" alt="Current Image" class="img-thumbnail" style="max-height: 150px;" />
 				}
 				else
 				{

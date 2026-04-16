@@ -6,7 +6,7 @@
 }
 <div class="card">
     <div class="card-header">
-        <h4 class="mb-0 text-center" style="font-size: 20px">List of Product Categories</h4>
+        <h4 class="mb-0 text-center" style="font-size: 20px">List of Categories</h4>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -26,7 +26,7 @@
                     {
                         <tr>
                             <td class="text-center">@item.MaLoai</td>
-                            <td class="text-center"><img src="~/Hinh/Loai/@item.Hinh" alt="@item.TenLoai" width="120" height="110"></td>
+                            <td class="text-center"><img src=@item.Hinh alt=@item.TenLoai width="120" height="110"></td>
                             <td class="text-center">@item.TenLoai</td>
                             <td class="text-center">@item.TenLoaiAlias</td>
                             <td class="text-center">@item.MoTa</td>
