@@ -1,15 +1,15 @@
 ﻿@model IEnumerable<HKShop.DTOs.HangHoaResponse>
 
 <div class="flex-center">
-	<h3 class="m-0">Có @Model.Count() sản phẩm</h3>
+	<h3 class="m-0">Have @Model.Count() products</h3>
     <div class="d-none d-md-flex header-search">
         @await Component.InvokeAsync("MenuLoai")
     </div>
-	<div class="mb-3 d-md-none">
+	@* <div class="mb-3 d-md-none">
 		<h4 class="mb-2">Price</h4>
 		<input type="range" class="form-range w-100" id="rangeInput" name="rangeInput" min="0" max="500" value="0" oninput="amount.value=rangeInput.value">
 		<output id="amount" name="amount" for="rangeInput">0</output>
-	</div>
+	</div> *@
 </div>
 
 <div class="row g-4">
@@ -44,13 +44,13 @@
                 </div>
                 <div class="product-btns flex-center gap-2 mx-1">
                     <a asp-action="AddToWishlist" asp-controller="HangHoa" asp-route-id="@item.MaHh" class="add-to-wishlist">
-                        <i class="fa fa-heart-o"></i><span class="tooltipp">Yêu thích</span>
+                        <i class="fa fa-heart-o"></i><span class="tooltipp">Add to Wishlist</span>
                     </a>
                     <a asp-action="AddToCompare" asp-controller="HangHoa" asp-route-id="@item.MaHh" class="add-to-compare">
-                        <i class="fa fa-exchange"></i><span class="tooltipp">So sánh</span>
+                        <i class="fa fa-exchange"></i><span class="tooltipp">Compare</span>
                     </a>
                     <a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@item.MaHh" class="quick-view">
-                        <i class="fa fa-eye"></i><span class="tooltipp">Chi tiết</span>
+                        <i class="fa fa-eye"></i><span class="tooltipp">View Details</span>
                     </a>
                 </div>
             </div>

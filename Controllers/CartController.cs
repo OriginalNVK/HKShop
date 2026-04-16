@@ -1,24 +1,24 @@
-﻿using HKShop.Models;
-using HKShop.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using HKShop.Helpers;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System;
+using HKShop.Models;
+using HKShop.Helpers;
+using HKShop.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace HKShop.Controllers
 {
-    public class GioHangController : Controller
-    {
+    public class CartController : Controller
+    {   
         private readonly DBContext db;
 
-        // private readonly PaypalClient _paymentClient;
+        private readonly PaypalClient _paymentClient;
 
-		public GioHangController(DBContext context)
+		public CartController(DBContext context, PaypalClient paymentClient)
 		{
 			db = context;
-			// _paymentClient = paymentClient;
+			_paymentClient = paymentClient;
 		}
 
 		private async Task<List<GioHangItem>> GetCart()
@@ -28,7 +28,7 @@ namespace HKShop.Controllers
             {
                 return null;
             }
-            var GioHangItems = await db.Carts.Where(c => c.MaKh == maKH).Select(c => new GioHangItem
+            var CartItems = await db.Carts.Where(c => c.MaKh == maKH).Select(c => new GioHangItem
             {
                 MaHH = c.MaHh,
                 TenHH = c.MaHhNavigation.TenHh,
@@ -36,17 +36,17 @@ namespace HKShop.Controllers
                 SoLuong = c.SoLuong,
                 Hinh = c.MaHhNavigation.Hinh
             }).ToListAsync();
-            return GioHangItems;
+            return CartItems;
         }
 
         public async Task<IActionResult> Index()
         {
-            var gioHangItems = await GetCart();
-            if(gioHangItems == null)
+            var cartItems = await GetCart();
+            if(cartItems == null)
             {
                 return Redirect("/KhachHang/DangNhap");
             }
-            return View(gioHangItems);
+            return View(cartItems);
         }
 
         public async Task<IActionResult> AddToCart(int id, int quantity = 1)
@@ -104,7 +104,7 @@ namespace HKShop.Controllers
         public IActionResult Checkout()
         {
             var maKH = HttpContext.User.Identity.IsAuthenticated ? HttpContext.User.FindFirst(Constants.CLAIM_CUSTOMERID)?.Value : "Guest";
-            var GioHangItems = db.Carts.Where(c => c.MaKh == maKH).Select(c => new GioHangItem
+            var Carts = db.Carts.Where(c => c.MaKh == maKH).Select(c => new GioHangItem
             {
                 MaHH = c.MaHh,
                 TenHH = c.MaHhNavigation.TenHh,
@@ -112,30 +112,30 @@ namespace HKShop.Controllers
                 SoLuong = c.SoLuong,    
                 Hinh = c.MaHhNavigation.Hinh
             }).ToList();
-            if (GioHangItems.Count == 0)
+            if (Carts.Count == 0)
             {
                 return Redirect("/");
             }
-            // ViewBag.PaypalClientId = _paymentClient.ClientId;
-            return View(GioHangItems);
+            ViewBag.PaypalClientId = _paymentClient.ClientId;
+            return View(Carts);
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Checkout(CheckoutVM model)
         {
-            var maKH = HttpContext.User.Claims.SingleOrDefault(p => p.Type == Constants.CLAIM_CUSTOMERID).Value;
-            var GioHangItems = await db.Carts.Where(c => c.MaKh == maKH).ToListAsync();
+            var customerID = HttpContext.User.Claims.SingleOrDefault(p => p.Type == Constants.CLAIM_CUSTOMERID).Value;
+            var Carts = await db.Carts.Where(c => c.MaKh == customerID).ToListAsync();
             if (ModelState.IsValid)
             {
                 var khachHang = new KhachHang();
                 if (model.GiongKhachHang)
                 {
-                    khachHang = await db.KhachHangs.SingleOrDefaultAsync(kh => kh.MaKh == maKH);
+                    khachHang = await db.KhachHangs.SingleOrDefaultAsync(kh => kh.MaKh == customerID);
                 }
                 var HoaDon = new HoaDon()
                 {
-                    MaKh = maKH,
+                    MaKh = customerID,
                     HoTen = model.HoTen ?? khachHang.HoTen,
                     DiaChi = model.DiaChi ?? khachHang.DiaChi,
                     DienThoai = model.DienThoai ?? khachHang.DienThoai,
@@ -152,7 +152,7 @@ namespace HKShop.Controllers
                     await db.AddAsync(HoaDon);
                     await db.SaveChangesAsync();
                     var cthds = new List<ChiTietHd>();
-                    foreach(var item in GioHangItems)
+                    foreach(var item in Carts)
                     {
                         cthds.Add(new ChiTietHd()
                         {
@@ -164,7 +164,7 @@ namespace HKShop.Controllers
                         });
                     }
                     await db.ChiTietHds.AddRangeAsync(cthds);
-                    db.Carts.RemoveRange(GioHangItems);
+                    db.Carts.RemoveRange(Carts);
                     await db.SaveChangesAsync();
 					db.Database.CommitTransaction();
                     return View("Success");
@@ -175,7 +175,7 @@ namespace HKShop.Controllers
                 }
             }
 
-            var CartItems = await db.Carts.Where(c => c.MaKh == maKH).Select(c => new GioHangItem
+            var CartItems = await db.Carts.Where(c => c.MaKh == customerID).Select(c => new GioHangItem
             {
                 MaHH = c.MaHh,
                 TenHH = c.MaHhNavigation.TenHh,
@@ -202,21 +202,20 @@ namespace HKShop.Controllers
             var donViTienTe = "USD";
             var maDonHangThamChieu = "DH" + DateTime.Now.Ticks.ToString();
 
-            return Ok();
-            // try
-            // {
-            //     var response = await _paymentClient.CreateOrder(tongTien, donViTienTe, maDonHangThamChieu);
+            try
+            {
+                var response = await _paymentClient.CreateOrder(tongTien, donViTienTe, maDonHangThamChieu);
 
-            //     return Ok(response);
-            // }
-            // catch (Exception ex)
-            // {
-            //     var error = new
-            //     {
-            //         ex.GetBaseException().Message
-            //     };
-            //     return BadRequest(error);
-            // }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var error = new
+                {
+                    ex.GetBaseException().Message
+                };
+                return BadRequest(error);
+            }
         }
 
         [Authorize]
@@ -229,74 +228,73 @@ namespace HKShop.Controllers
 		[HttpPost("Cart/capture-paypal-order")]
         public async Task<IActionResult> CapturePaypalOrder([FromQuery] string orderID, CancellationToken cancellationToken)
         {
-			var maKH = HttpContext.User.Claims.SingleOrDefault(p => p.Type == Constants.CLAIM_CUSTOMERID)?.Value;
-            var GioHangItems = await db.Carts.Where(c => c.MaKh == maKH).ToListAsync();
+			var customerID = HttpContext.User.Claims.SingleOrDefault(p => p.Type == Constants.CLAIM_CUSTOMERID)?.Value;
+			var carts = await db.Carts.Where(c => c.MaKh == customerID).ToListAsync();
 
-            // try
-            // {
-            // 	var response = await _paymentClient.CaptureOrder(orderID);
+			try
+			{
+				var response = await _paymentClient.CaptureOrder(orderID);
 
-            // 	// Lấy thông tin khách hàng từ DB
-            // 	var khachHang = await db.KhachHangs.SingleOrDefaultAsync(k => k.MaKh == customerID);
+				// Lấy thông tin khách hàng từ DB
+				var khachHang = await db.KhachHangs.SingleOrDefaultAsync(k => k.MaKh == customerID);
 
-            // 	// Tạo hóa đơn mới
-            // 	var hoaDon = new HoaDon()
-            // 	{
-            // 		MaKh = customerID,
-            // 		HoTen = khachHang?.HoTen ?? response.payer.name.given_name,
-            // 		DiaChi = khachHang?.DiaChi ?? "Không có địa chỉ", // Nếu PayPal trả về shipping address thì có thể dùng nó
-            // 		DienThoai = khachHang?.DienThoai ?? "Không rõ",
-            // 		NgayDat = DateTime.Now,
-            // 		CachThanhToan = "PayPal",
-            // 		CachVanChuyen = "Grab", // Có thể cho chọn sau
-            // 		MaTrangThai = 1, // Đơn hàng đã thanh toán
-            // 		GhiChu = "Thanh toán qua PayPal"
-            // 	};
+				// Tạo hóa đơn mới
+				var hoaDon = new HoaDon()
+				{
+					MaKh = customerID,
+					HoTen = khachHang?.HoTen ?? response.payer.name.given_name,
+					DiaChi = khachHang?.DiaChi ?? "Không có địa chỉ", // Nếu PayPal trả về shipping address thì có thể dùng nó
+					DienThoai = khachHang?.DienThoai ?? "Không rõ",
+					NgayDat = DateTime.Now,
+					CachThanhToan = "PayPal",
+					CachVanChuyen = "Grab", // Có thể cho chọn sau
+					MaTrangThai = 1, // Đơn hàng đã thanh toán
+					GhiChu = "Thanh toán qua PayPal"
+				};
 
-            // 	db.Database.BeginTransaction();
-            // 	try
-            // 	{
-            // 		await db.HoaDons.AddAsync(hoaDon);
-            // 		await db.SaveChangesAsync();
+				db.Database.BeginTransaction();
+				try
+				{
+					await db.HoaDons.AddAsync(hoaDon);
+					await db.SaveChangesAsync();
 
-            // 		var cthds = new List<ChiTietHd>();
-            // 		foreach (var item in carts)
-            // 		{
-            // 			cthds.Add(new ChiTietHd()
-            // 			{
-            // 				MaHd = hoaDon.MaHd,
-            // 				SoLuong = item.SoLuong,
-            // 				DonGia = item.DonGia,
-            // 				MaHh = item.MaHh,
-            // 				GiamGia = 0
-            // 			});
-            // 		}
+					var cthds = new List<ChiTietHd>();
+					foreach (var item in carts)
+					{
+						cthds.Add(new ChiTietHd()
+						{
+							MaHd = hoaDon.MaHd,
+							SoLuong = item.SoLuong,
+							DonGia = item.DonGia,
+							MaHh = item.MaHh,
+							GiamGia = 0
+						});
+					}
 
-            // 		await db.ChiTietHds.AddRangeAsync(cthds);
+					await db.ChiTietHds.AddRangeAsync(cthds);
 
-            // 		// Xóa giỏ hàng
-            // 		db.Carts.RemoveRange(carts);
+					// Xóa giỏ hàng
+					db.Carts.RemoveRange(carts);
 
-            // 		await db.SaveChangesAsync();
-            // 		db.Database.CommitTransaction();
+					await db.SaveChangesAsync();
+					db.Database.CommitTransaction();
 
-            // 		return Ok(response);
-            // 	}
-            // 	catch (Exception ex)
-            // 	{
-            // 		db.Database.RollbackTransaction();
-            // 		return BadRequest(new { Message = "Lỗi lưu hóa đơn: " + ex.Message });
-            // 	}
-            // }
-            // catch (Exception ex)
-            // {
-            // 	var error = new
-            // 	{
-            // 		ex.GetBaseException().Message
-            // 	};
-            // 	return BadRequest(error);
-            // }
-            return Ok();
+					return Ok(response);
+				}
+				catch (Exception ex)
+				{
+					db.Database.RollbackTransaction();
+					return BadRequest(new { Message = "Lỗi lưu hóa đơn: " + ex.Message });
+				}
+			}
+			catch (Exception ex)
+			{
+				var error = new
+				{
+					ex.GetBaseException().Message
+				};
+				return BadRequest(error);
+			}
 		}
 		#endregion
 	}

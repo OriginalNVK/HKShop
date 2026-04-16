@@ -59,8 +59,8 @@
 					@foreach (var item in Model)
 					{
 						<tr>
-							<td class="text-center">@(j++)</td>
-							<td class="text-center">
+							<td class="text-center align-middle">@(j++)</td>
+							<td class="text-center align-middle">
 								@if (!String.IsNullOrEmpty(item.Hinh))
 								{
 									<img src="@item.Hinh"
@@ -71,24 +71,19 @@
 								else
 								{
 									<div class="mt-2">
-										<div style="width: 150px; height: 150px;
-                        border: 1px solid #ddd;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        background-color: #f8f9fa;"
+										<div style="width: 150px; height: 150px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;"
 											 class="img-thumbnail">
 											<span style="color: #666; font-size: 14px;">No Image</span>
 										</div>
 									</div>
 								}
 							</td>
-							<td class="text-center">@item.HoTen</td>
-							<td class="text-center">@(item.GioiTinh? "Nam" : "Nữ")</td>
-							<td class="text-center">@item.DienThoai</td>
-							<td class="text-center">@item.DiaChi</td>
-							<td class="text-center">@item.Email</td>
-							<td class="text-center">
+							<td class="text-center align-middle">@item.HoTen</td>
+							<td class="text-center align-middle">@(item.GioiTinh ? "Male" : "Female")</td>
+							<td class="text-center align-middle">@item.DienThoai</td>
+							<td class="text-center align-middle">@item.DiaChi</td>
+							<td class="text-center align-middle">@item.Email</td>
+							<td class="text-center align-middle">
 								<div class="btn-group flex-center gap-2" role="group">
 									<a asp-action="Update" asp-controller="Clients" asp-route-id="@item.MaKH"
 									   class="btn btn-sm btn-warning" title="Edit user information">

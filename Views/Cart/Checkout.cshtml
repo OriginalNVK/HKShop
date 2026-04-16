@@ -5,34 +5,34 @@
 <!-- Checkout Page Start -->
 <div class="container-fluid py-5">
 	<div class="container py-5">
-		<h1 class="mb-4 mt-2 text-center" style="color: #D10024">Chi tiết hóa đơn</h1>
+		<h1 class="mb-4 mt-2 text-center" style="color: #D10024">Cart Details</h1>
 		<form asp-action="Checkout" asp-controller="Cart" method="post">
 			<div class="row g-5">
 				<div class="col-md-12 col-lg-6 col-xl-7">
 					<div class="form-check my-3">
 						<input type="checkbox" class="form-check-input" name="GiongKhachHang" value="false" id="GiongKhachHang" />
-						<label class="form-check-label" for="GiongKhachHang">Giống thông tin khách hàng?</label>
+						<label class="form-check-label" for="GiongKhachHang">Same as customer information?</label>
 					</div>
 
 					<div class="form-item">
-						<label class="form-label my-3 delivery-info">Người nhận hàng<sup>*</sup></label>
+						<label class="form-label my-3 delivery-info">Recipient Name<sup>*</sup></label>
 						<input type="text" name="HoTen" class="form-control">
 					</div>
 
 					<div class="form-item">
-						<label class="form-label my-3 delivery-info">Địa chỉ nhận hàng <sup>*</sup></label>
-						<input type="text" name="DiaChi" class="form-control" placeholder="KTX khu B, DHQG">
+						<label class="form-label my-3 delivery-info">Delivery Address <sup>*</sup></label>
+						<input type="text" name="DiaChi" class="form-control" placeholder="123 Main St, City, Country">
 					</div>
 
 					<div class="form-item">
-						<label class="form-label my-3 delivery-info">Điện thoại<sup>*</sup></label>
+						<label class="form-label my-3 delivery-info">Phone Number<sup>*</sup></label>
 						<input type="text" name="DienThoai" class="form-control">
 					</div>
 
 					<hr />
 
 					<div class="form-item">
-						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Ghi chú"></textarea>
+						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Other notes"></textarea>
 					</div>
 				</div>
 				<div class="col-md-12 col-lg-6 col-xl-5">
@@ -119,7 +119,7 @@
 			<!-- Hàng cho phương thức thanh toán -->
 			<div class="row g-4 justify-content-center border-bottom py-3 my-3">
 				<div class="col-md-12 col-xl-7 text-center">
-					<div class="flex-wrap flex-center gap-4">
+					<div class="flex-wrap flex-center">
 						<!-- Cash On Delivery -->
 						<div>
 							<input type="radio" class="form-check-input bg-primary border-0" id="Delivery-1" name="PaymentMethod" value="Delivery">
@@ -138,7 +138,7 @@
 			<div class="row g-4 justify-content-center py-3">
 				<div class="col-12 text-center flex-center">
 					<button type="submit" class="btn bg-red w-40 text-uppercase mb-2">
-						Đặt hàng
+						Checkout
 					</button>
 					<div id="paypal-button-container" class="btn w-40 text-uppercase mb-2"></div>
 				</div>
@@ -171,7 +171,6 @@
 				label: 'paypal'
 			},
 
-			// ✅ Bổ sung dấu phẩy trước createOrder
 			async createOrder() {
 				try {
 					const response = await fetch("/Cart/create-paypal-order", {
@@ -187,7 +186,7 @@
 					}
 
 					const order = await response.json();
-					return order.id; // ✅ Trả về id đơn hàng để PayPal xử lý
+					return order.id;
 				} catch (err) {
 					alert("Có lỗi: " + err.message);
 				}

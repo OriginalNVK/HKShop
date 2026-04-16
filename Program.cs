@@ -48,6 +48,12 @@ builder.Services.AddAutoMapper(
     _ => { },
     typeof(HKShop.Helpers.AutoMapper).Assembly);
 
+ builder.Services.AddSingleton(x => new PaypalClient(
+                builder.Configuration["PaypalOption:AppID"],
+                builder.Configuration["PaypalOption:AppSecret"],
+                builder.Configuration["PaypalOption:Mode"]
+            ));
+
 var app = builder.Build();
 
 // Configure middleware
