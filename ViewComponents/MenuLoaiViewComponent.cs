@@ -2,7 +2,7 @@
 using HKShop.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HShop.ViewComponents
+namespace HKShop.ViewComponents
 {
     public class MenuLoaiViewComponent : ViewComponent
     {
@@ -11,11 +11,11 @@ namespace HShop.ViewComponents
 
         public IViewComponentResult Invoke()
         {
-            var data = db.Loais.Select(l => new MenuLoai
+            var data = db.Categories.Select(l => new MenuLoai
             {
-                MaLoai = l.Maloai,
-                TenLoai = l.Tenloai,
-                SoLuong = l.HangHoas.Count
+                MaLoai = l.CategoryId,
+                TenLoai = l.CategoryName,
+                SoLuong = l.Products.Count
             }).OrderBy(p => p.TenLoai);
 
             return View(data);

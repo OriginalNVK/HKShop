@@ -5,27 +5,21 @@ namespace HKShop.Models;
 
 public partial class User
 {
-    public string MaKh { get; set; } = null!;
+    public int Id { get; set; }
 
-    public string? MatKhau { get; set; }
+    public string Username { get; set; } = null!;
 
-    public string HoTen { get; set; } = null!;
+    public string Password { get; set; } = null!;
 
-    public bool GioiTinh { get; set; }
+    public int Role { get; set; }
 
-    public DateOnly NgaySinh { get; set; }
+    public bool IsActive { get; set; }
 
-    public string? DiaChi { get; set; }
-
-    public string? DienThoai { get; set; }
-
-    public string Email { get; set; } = null!;
-
-    public string? Hinh { get; set; }
-
-    public bool HieuLuc { get; set; }
-
-    public int VaiTro { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public string? RandomKey { get; set; }
+
+    public virtual Customer? Customer { get; set; }
+
+    public virtual Admin? Admin { get; set; }
 }

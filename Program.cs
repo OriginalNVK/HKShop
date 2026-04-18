@@ -1,5 +1,9 @@
 using HKShop.Helpers;
 using HKShop.Models;
+using HKShop.Repositories;
+using HKShop.Repositories.Interfaces;
+using HKShop.Services;
+using HKShop.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -44,14 +48,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<IGenerateToken, GenerateToken>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IDetailInvoiceRepository, DetailInvoiceRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IAdminCustomerService, AdminCustomerService>();
+builder.Services.AddScoped<IAdminOrderService, AdminOrderService>();
+builder.Services.AddScoped<IAdminProductService, AdminProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IHomeService, HomeService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+
 builder.Services.AddAutoMapper(
     _ => { },
     typeof(HKShop.Helpers.AutoMapper).Assembly);
 
  builder.Services.AddSingleton(x => new PaypalClient(
-                builder.Configuration["PaypalOption:AppID"],
-                builder.Configuration["PaypalOption:AppSecret"],
-                builder.Configuration["PaypalOption:Mode"]
+                builder.Configuration["PaypalOption:AppID"] ?? throw new InvalidOperationException("PaypalOption:AppID is not configured"),
+                builder.Configuration["PaypalOption:AppSecret"] ?? throw new InvalidOperationException("PaypalOption:AppSecret is not configured"),
+                builder.Configuration["PaypalOption:Mode"] ?? throw new InvalidOperationException("PaypalOption:Mode is not configured")
             ));
 
 var app = builder.Build();

@@ -26,13 +26,13 @@ namespace HKShop.ViewComponents
                 });
             }
 
-            var gioHangItems = context.Carts.Where(c => c.MaKh == maKH).Select(c => new GioHangItem
+            var gioHangItems = context.Carts.Where(c => c.CustomerId == maKH).Select(c => new GioHangItem
             {
-                MaHH = c.MaHh,
-                TenHH = c.MaHhNavigation.TenHh,
-                DonGia = c.DonGia,
-                SoLuong = c.SoLuong,
-                Hinh = c.MaHhNavigation.Hinh
+                MaHH = c.ProductId,
+                TenHH = c.ProductIdNavigation.ProductName,
+                DonGia = c.Amount,
+                SoLuong = c.Quantity,
+                Hinh = c.ProductIdNavigation.Image
             }).ToList();
             return View(new GioHangModel()
             {

@@ -16,22 +16,22 @@ namespace HKShop.ViewComponents
         {
             var model = new CategoriesModel()
             {
-                Categories = db.Loais
+                Categories = db.Categories
                 .Select(l => new CategoryProducts
                 {
-                    MaLoai = l.Maloai,
-                    TenLoai = l.Tenloai,
-                    Products = db.HangHoas
-                        .Where(h => h.MaLoai == l.Maloai)
-                        .OrderByDescending(h => h.NgaySx) // Sắp xếp theo sản phẩm mới nhất
+                    MaLoai = l.CategoryId,
+                    TenLoai = l.CategoryName,
+                    Products = db.Products
+                        .Where(h => h.CategoryId == l.CategoryId)
+                        .OrderByDescending(h => h.CreatedAt)
                         .Take(5) // Lấy 5 sản phẩm
                         .Select(h => new HangHoaResponse
                         {
-                            MaHh = h.MaHh,
-                            TenHH = h.TenHh,
-                            DonGia = h.DonGia ?? 0,
-                            Hinh = h.Hinh ?? "default.png",
-                            GiamGia = h.GiamGia
+                            MaHh = h.ProductId,
+                            TenHH = h.ProductName,
+                            DonGia = h.Price ?? 0,
+                            Hinh = h.Image ?? "default.png",
+                            GiamGia = h.Discount
                         })
                         .ToList()
                 })
