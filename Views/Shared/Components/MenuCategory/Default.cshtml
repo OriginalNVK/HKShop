@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<HKShop.DTOs.CategoryMenuDto>
-<form class="flex-center" method="get" asp-controller="HangHoa" asp-action="Index">
-    <select class="input-select d-md-none" name="MaLoai">
+<form class="flex-center" method="get" asp-controller="Product" asp-action="Index">
+    <select class="input-select d-md-none" name="CategoryId">
         <option value="0">Categories</option>
         @foreach(var item in Model)
         {
