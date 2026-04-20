@@ -66,14 +66,14 @@
                     <div class="add-to-cart">
                         <form asp-action="AddToCart" asp-controller="Cart" asp-route-id="@Model.ProductId">
                             <div class="qty-label">
-                                Qty
+                                @UIConstants.Product.Qty
                                 <div class="input-number">
                                     <input type="number" name="quantity" value="1">
                                     <span class="qty-up">+</span>
                                     <span class="qty-down">-</span>
                                 </div>
                             </div>
-                            <button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> Mua Hàng</button>
+                            <button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> @UIConstants.Product.AddToCart</button>
                         </form>
                     </div>
 
@@ -195,39 +195,23 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="section-title text-center">
-                    <h3 class="title">Related Products</h3>
+                    <h3 class="title">@UIConstants.Product.RelatedProducts</h3>
                 </div>
             </div>
 
-            <!-- Example related product (repeat as needed) -->
             <div class="col-md-3 col-xs-6">
-                <div class="product">
-                    <div class="product-img">
-                        <img src="img/vegetable-item-6.jpg" alt="">
-                    </div>
-                    <div class="product-body">
-                        <p class="product-category">@Model.CategoryName</p>
-                        <h3 class="product-name"><a href="#">@Model.ProductName</a></h3>
-                        <h4 class="product-price">@Model.Price $</h4>
-                        <div class="product-rating">
-                            <i class="fa fa-star text-secondary"></i>
-                            <i class="fa fa-star text-secondary"></i>
-                            <i class="fa fa-star text-secondary"></i>
-                            <i class="fa fa-star text-secondary"></i>
-                            <i class="fa fa-star"></i>
-                        </div>
-                        <div class="product-btns">
-                            <button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
-                            <button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
-                            <button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
-                        </div>
-                    </div>
-                    <div class="add-to-cart">
-                        <button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> add to cart</button>
-                    </div>
-                </div>
+                @await Html.PartialAsync("_ProductCard", new ProductCardViewModel
+                {
+                    ProductId = Model.ProductId,
+                    ProductName = Model.ProductName,
+                    CategoryName = Model.CategoryName,
+                    Price = Model.Price,
+                    Discount = 0,
+                    ImageUrl = Model.ImageUrl,
+                    ShowNewBadge = false,
+                    CompactRating = false
+                })
             </div>
-            <!-- Add more related products here as needed -->
         </div>
     </div>
 </div>

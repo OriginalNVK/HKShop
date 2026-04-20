@@ -5,7 +5,7 @@
 
 <div class="container-fluid py-5">
 	<div class="container py-5">
-        <h1 class="mb-4 mt-4 text-center" style="color: #D10024;">Register Member</h1>
+    <h1 class="mb-4 mt-4 text-center" style="color: #D10024;">@UIConstants.Auth.RegisterTitle</h1>
         <form asp-action="DangKy" enctype="multipart/form-data" asp-controller="KhachHang">
             <div class="row">
                 <div class="col-md-12 col-lg-6">
@@ -37,15 +37,15 @@
             <!-- Giới tính và Ngày sinh cùng hàng -->
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <label class="form-label my-3">Giới tính</label><sup>*</sup>
+                    <label class="form-label my-3">@UIConstants.Auth.Gender</label><sup>*</sup>
                     <div class="d-flex align-items-center gap-1">
                         <div class="form-check me-3">
                             <input class="form-check-input" type="radio" asp-for="@Model.Gender" value="true" id="Nam">
-                            <label class="form-check-label" for="Nam">Nam</label>
+                            <label class="form-check-label" for="Nam">@UIConstants.Auth.Male</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" asp-for="@Model.Gender" value="false" id="Nu">
-                            <label class="form-check-label" for="Nu">Nữ</label>
+                            <label class="form-check-label" for="Nu">@UIConstants.Auth.Female</label>
                         </div>
                     </div>
                     <span asp-validation-for="@Model.Gender" class="text-danger"></span>
@@ -90,14 +90,14 @@
             <div class="row">
                 <div class="col-12">
                     <div class="form-item">
-                        <label class="form-label my-3" for="Hinh">Image</label><sup>*</sup>
+                        <label class="form-label my-3" for="Hinh">@UIConstants.Auth.ImageLabel</label><sup>*</sup>
                         <input type="file" name="hinh" class="form-control">
                     </div>
                 </div>
             </div>
 
             <div class="row g-4 text-center align-items-center justify-content-center pt-4 mt-4">
-                <button type="submit" class="btn border-primary border-hover-primary py-3 px-4 text-uppercase my-3 w-60">Register</button>
+                <button type="submit" class="btn border-primary border-hover-primary py-3 px-4 text-uppercase my-3 w-60">@UIConstants.Auth.RegisterButton</button>
             </div>
         </form>
 	</div>

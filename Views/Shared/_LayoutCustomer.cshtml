@@ -10,7 +10,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
-    <title>HK Shop</title>
+    <title>@UIConstants.Brand.CustomerTitle</title>
 
     <!-- Google font -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700" rel="stylesheet">
@@ -50,13 +50,11 @@
             <div id="top-header">
                 <div class="container">
                     <ul class="header-links pull-left md-hidden d-md-none">
-                        <li><a href="#" class=""><i class="fa fa-phone"></i> +8485-898-1798</a></li>
-                        <li><a href="#"><i class="fa fa-envelope-o"></i> nvk.work@outlook.com.vn</a></li>
-                        <li><a href="#"><i class="fa fa-map-marker"></i> HK Limited Company</a></li>
+                        @await Html.PartialAsync("_ContactInfoLinks")
                     </ul>
                     <ul class="header-links pull-right">
                         <li class="dropdown">
-                            @if (User.Identity.IsAuthenticated)
+                            @if (User.Identity?.IsAuthenticated == true)
                             {
                                 // Nếu đã đăng nhập, hiển thị "Hello @Hoten"
                                 <a href="#" class="dropdown-toggle" id="accountDropdown" role="button"
@@ -64,8 +62,7 @@
                                     <i class="fa fa-user-o"></i> Hello @User.Identity.Name <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-action="DangXuat" asp-controller="KhachHang">Đăng
-                                            xuất</a></li>
+                                    <li><a class="dropdown-item" asp-action="DangXuat" asp-controller="KhachHang">@UIConstants.Navigation.Logout</a></li>
                                 </ul>
                             }
                             else
@@ -73,12 +70,11 @@
                                 // Nếu chưa đăng nhập, hiển thị "Tài khoản" với các tùy chọn Đăng nhập/Đăng ký
                                 <a href="#" class="dropdown-toggle" id="accountDropdown" role="button"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="fa fa-user-o"></i> Tài khoản <span class="caret"></span>
+                                    <i class="fa fa-user-o"></i> @UIConstants.Navigation.Account <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-action="DangNhap" asp-controller="KhachHang">Đăng
-                                            nhập</a></li>
-                                    <li><a class="dropdown-item" asp-action="DangKy" asp-controller="KhachHang">Đăng ký</a>
+                                    <li><a class="dropdown-item" asp-action="DangNhap" asp-controller="KhachHang">@UIConstants.Navigation.Login</a></li>
+                                    <li><a class="dropdown-item" asp-action="DangKy" asp-controller="KhachHang">@UIConstants.Navigation.Register</a>
                                     </li>
                                 </ul>
                             }
@@ -97,7 +93,7 @@
                         <div class="col-md-3">
                             <div class="header-logo">
                                 <a href="/" class="logo">
-                                    <h1 class="text-gradient">HK SHOP</h1>
+                                    <h1 class="text-gradient">@UIConstants.Brand.Name</h1>
                                 </a>
                             </div>
                         </div>
@@ -116,7 +112,7 @@
                                 <div class="wishlist-icon">
                                     <a href="/blank">
                                         <i class="fa fa-heart-o"></i>
-                                        <span class="text-label">Wishlist</span>
+                                        <span class="text-label">@UIConstants.Navigation.Wishlist</span>
                                         <div class="qty">2</div>
                                     </a>
                                 </div>
@@ -127,7 +123,7 @@
                                 <div class="menu-toggle">
                                     <a href="#">
                                         <i class="fa fa-bars"></i>
-                                        <span class="text-label">Menu</span>
+                                        <span class="text-label">@UIConstants.Navigation.Menu</span>
                                     </a>
                                 </div>
                                 <!-- /Menu Toogle -->

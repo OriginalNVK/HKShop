@@ -1,0 +1,63 @@
+@model HKShop.DTOs.ProductCardViewModel
+
+<div class="product">
+    <div class="product-img">
+        <a asp-action="Detail" asp-controller="Product" asp-route-id="@Model.ProductId">
+            <img src="@Model.ImageUrl" class="img-fluid w-small" alt="@Model.ProductName">
+        </a>
+
+        @if (Model.Discount > 0)
+        {
+            <div class="product-label">
+                <span class="sale">---@Model.Discount%</span>
+            </div>
+        }
+
+        @if (Model.ShowNewBadge)
+        {
+            <div class="product-label">
+                <span class="new">@UIConstants.Product.NewBadge</span>
+            </div>
+        }
+    </div>
+
+    <div class="product-body">
+        <p class="product-category">@Model.CategoryName</p>
+        <h3 class="product-name">
+            <a asp-controller="Product" asp-action="Detail" asp-route-id="@Model.ProductId">@Model.ProductName</a>
+        </h3>
+        <h4 class="product-price">
+            $@Model.FinalPrice.ToString("#,##0.00")
+            @if (Model.Discount > 0)
+            {
+                <del class="product-old-price">$@Model.Price?.ToString("#,##0.00")</del>
+            }
+        </h4>
+
+        <div class="product-rating @(Model.CompactRating ? "d-md-none" : string.Empty)">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+        </div>
+
+        <div class="product-btns d-flex gap-2 mx-1">
+            <a asp-action="AddToWishlist" asp-controller="Product" asp-route-id="@Model.ProductId" class="add-to-wishlist">
+                <i class="fa fa-heart-o"></i><span class="tooltipp">@UIConstants.Product.AddToWishlist</span>
+            </a>
+            <a asp-action="AddToCompare" asp-controller="Product" asp-route-id="@Model.ProductId" class="add-to-compare">
+                <i class="fa fa-exchange"></i><span class="tooltipp">@UIConstants.Product.Compare</span>
+            </a>
+            <a asp-action="Detail" asp-controller="Product" asp-route-id="@Model.ProductId" class="quick-view">
+                <i class="fa fa-eye"></i><span class="tooltipp">@UIConstants.Product.ViewDetails</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="add-to-cart">
+        <a asp-action="AddToCart" asp-controller="Cart" asp-route-id="@Model.ProductId" class="add-to-cart-btn">
+            <i class="fa fa-shopping-cart d-md-none"></i> @UIConstants.Product.AddToCart
+        </a>
+    </div>
+</div>

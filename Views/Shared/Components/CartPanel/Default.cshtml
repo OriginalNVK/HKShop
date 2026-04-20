@@ -4,7 +4,7 @@
 <div class="dropdown">
     <a class="dropdown-toggle cursor md-48" data-toggle="dropdown" aria-expanded="true">
         <i class="fa fa-shopping-cart"></i>
-        <span>Cart</span>
+        <span>@UIConstants.Cart.CartLabel</span>
         <span class="qty">@Model.TotalQuantity</span>
     </a>
     <div class="cart-dropdown">
@@ -33,16 +33,16 @@
             }
             else
             {
-                <p>Empty Cart</p>
+                <p>@UIConstants.Cart.EmptyCart</p>
             }
         </div>
         <div class="cart-summary">
-            <small>@Model.TotalQuantity Item(s) selected</small>
-            <h5>SUBTOTAL: $@Model.Total.ToString("#,##0.00")</h5>
+            <small>@Model.TotalQuantity @UIConstants.Cart.ItemSelectedSuffix</small>
+            <h5>@UIConstants.Cart.Subtotal: $@Model.Total.ToString("#,##0.00")</h5>
         </div>
         <div class="cart-btns">
-            <a href="/Cart">View Cart</a>
-            <a href="/Cart/Checkout">Checkout <i class="fa fa-arrow-circle-right"></i></a>
+            <a href="/Cart">@UIConstants.Cart.ViewCart</a>
+            <a href="/Cart/Checkout">@UIConstants.Cart.Checkout <i class="fa fa-arrow-circle-right"></i></a>
         </div>
     </div>
 </div>

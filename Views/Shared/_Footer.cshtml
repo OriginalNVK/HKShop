@@ -8,25 +8,22 @@
 			<div class="row">
 				<div class="col-md-3 col-xs-6">
 					<div class="footer">
-						<h3 class="footer-title">ABOUT US</h3>
-						<p>HK Shop - Your One-Stop Technology Store</p>
+						<h3 class="footer-title">@UIConstants.Footer.AboutUs</h3>
+						<p>@UIConstants.Footer.AboutDescription</p>
 						<ul class="footer-links">
-							<li><a href="#"><i class="fa fa-map-marker"></i>HK Limited Company</a></li>
-							<li><a href="#"><i class="fa fa-phone"></i>+8485-898-1798</a></li>
-							<li><a href="#"><i class="fa fa-envelope-o"></i>nvk.work@outlook.com</a></li>
+							@await Html.PartialAsync("_ContactInfoLinks")
 						</ul>
 					</div>
 				</div>
 
 				<div class="col-md-3 col-xs-6">
 					<div class="footer">
-						<h3 class="footer-title">CATEGORIES</h3>
+						<h3 class="footer-title">@UIConstants.Footer.Categories</h3>
 						<ul class="footer-links">
-							<li><a href="/HangHoa">Visit Store</a></li>
-							<li><a href="/HangHoa?MaLoai=1001">Laptops</a></li>
-							<li><a href="/HangHoa?MaLoai=1003">Smartphones</a></li>
-							<li><a href="/HangHoa?MaLoai=1002">Cameras</a></li>
-							<li><a href="/HangHoa?MaLoai=1000">Watches</a></li>
+							@foreach (var link in UIConstants.FooterCategoryLinks)
+							{
+								<li><a href="@link.Href">@link.Text</a></li>
+							}
 						</ul>
 					</div>
 				</div>
@@ -35,23 +32,24 @@
 
 				<div class="col-md-3 col-xs-6">
 					<div class="footer">
-						<h3 class="footer-title">INFORMATION</h3>
+						<h3 class="footer-title">@UIConstants.Footer.Information</h3>
 						<ul class="footer-links">
-							<li><a href="/blank">About Us</a></li>
-							<li><a href="/blank">Contact Us</a></li>
-							<li><a href="/blank">Privacy Policy</a></li>
-							<li><a href="/blank">Terms & Conditions</a></li>
+							@foreach (var link in UIConstants.FooterInformationLinks)
+							{
+								<li><a href="@link.Href">@link.Text</a></li>
+							}
 						</ul>
 					</div>
 				</div>
 
 				<div class="col-md-3 col-xs-6">
 					<div class="footer">
-						<h3 class="footer-title">SERVICES</h3>
+						<h3 class="footer-title">@UIConstants.Footer.Services</h3>
 						<ul class="footer-links">
-							<li><a href="/Profile">My Account</a></li>
-							<li><a href="/Cart">Shopping Cart</a></li>
-							<li><a href="/blank">Wishlist</a></li>
+							@foreach (var link in UIConstants.FooterServiceLinks)
+							{
+								<li><a href="@link.Href">@link.Text</a></li>
+							}
 						</ul>
 					</div>
 				</div>
