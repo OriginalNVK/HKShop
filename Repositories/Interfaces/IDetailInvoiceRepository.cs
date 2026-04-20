@@ -44,6 +44,8 @@ public interface IDetailInvoiceRepository
     /// <param name="cancellationToken"></param>
     /// <returns>True if the detail invoice was deleted successfully, false otherwise</returns>
     Task<bool> DeleteAsync(int detailInvoiceId, CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsByProductIdAsync(int productId, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get the subtotal for a specific invoice.

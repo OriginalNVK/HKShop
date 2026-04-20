@@ -1,45 +1,60 @@
 using HKShop.DTOs;
-using HKShop.Models;
+using HKShop.Repositories.Interfaces;
 using HKShop.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace HKShop.Services;
 
 public class AdminService : IAdminService
 {
-	private readonly DBContext _db;
+	private readonly IUserRepository _userRepository;
+	private readonly IInvoiceRepository _invoiceRepository;
+	private readonly IProductRepository _productRepository;
+	private readonly ICategoryRepository _categoryRepository;
+	private readonly ICustomerRepository _customerRepository;
 
-	public AdminService(DBContext db)
+	public AdminService(
+		IUserRepository userRepository,
+		IInvoiceRepository invoiceRepository,
+		IProductRepository productRepository,
+		ICategoryRepository categoryRepository,
+		ICustomerRepository customerRepository)
 	{
-		_db = db;
+		_userRepository = userRepository;
+		_invoiceRepository = invoiceRepository;
+		_productRepository = productRepository;
+		_categoryRepository = categoryRepository;
+		_customerRepository = customerRepository;
 	}
 
-	public async Task<OverviewDTO> GetOverviewAsync(CancellationToken cancellationToken = default)
+	public async Task<DashboardOverviewDto> GetOverviewAsync(CancellationToken cancellationToken = default)
 	{
 		var endDate = DateTime.Today;
 		var startCustomer = endDate.AddDays(-6);
 		var startOrder = endDate.AddDays(-13);
 
-		var customerRaw = await _db.Users
+		var users = await _userRepository.GetAllAsync(cancellationToken);
+		var invoices = await _invoiceRepository.GetAllAsync(cancellationToken);
+
+		var customerRaw = users
 			.Where(u => u.Role == 0 && u.CreatedAt.Date >= startCustomer && u.CreatedAt.Date <= endDate)
 			.GroupBy(u => u.CreatedAt.Date)
 			.Select(g => new { Date = g.Key, Amount = g.Count() })
-			.ToListAsync(cancellationToken);
+			.ToList();
 
-		var orderRaw = await _db.Invoices
+		var orderRaw = invoices
 			.Where(i => i.OrderDate.Date >= startOrder && i.OrderDate.Date <= endDate)
 			.GroupBy(i => i.OrderDate.Date)
 			.Select(g => new { Date = g.Key, Amount = g.Count() })
-			.ToListAsync(cancellationToken);
+			.ToList();
 
 		var customerMap = customerRaw.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Amount);
 		var orderMap = orderRaw.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Amount);
 
-		var result = new OverviewDTO();
+		var result = new DashboardOverviewDto();
 		for (var i = 0; i < 7; i++)
 		{
 			var d = DateOnly.FromDateTime(startCustomer.AddDays(i));
-			result.CustomerIn7Day.Add(new CustomerOrOrderOverview
+			result.CustomerIn7Day.Add(new DailyMetricDto
 			{
 				Date = d,
 				Amount = customerMap.GetValueOrDefault(d, 0)
@@ -49,7 +64,7 @@ public class AdminService : IAdminService
 		for (var i = 0; i < 14; i++)
 		{
 			var d = DateOnly.FromDateTime(startOrder.AddDays(i));
-			result.OrderIn14Day.Add(new CustomerOrOrderOverview
+			result.OrderIn14Day.Add(new DailyMetricDto
 			{
 				Date = d,
 				Amount = orderMap.GetValueOrDefault(d, 0)
@@ -59,23 +74,25 @@ public class AdminService : IAdminService
 		return result;
 	}
 
-	public async Task<List<InvoiceResponse>> GetOrdersAsync(CancellationToken cancellationToken = default)
+	public async Task<List<InvoiceDto>> GetOrdersAsync(CancellationToken cancellationToken = default)
 	{
-		return await _db.Invoices
+		var invoices = await _invoiceRepository.GetAllAsync(cancellationToken);
+
+		return invoices
 			.OrderByDescending(i => i.OrderDate)
-			.Select(i => new InvoiceResponse
+			.Select(i => new InvoiceDto
 			{
-				MaHd = i.InvoiceId,
-				HoTen = i.CustomerName ?? string.Empty,
-				NgayDat = i.OrderDate,
-				DiaChi = i.Address,
-				CachThanhToan = i.PaymentMethod,
-				CachVanChuyen = i.ShippingMethod,
-				TrangThai = MapInvoiceStatus(i.StatusCode),
-				GhiChu = i.Notes ?? string.Empty,
-				DienThoai = i.PhoneNumber
+				InvoiceId = i.InvoiceId,
+				CustomerName = i.CustomerName ?? string.Empty,
+				OrderDate = i.OrderDate,
+				Address = i.Address,
+				PaymentMethod = i.PaymentMethod,
+				ShippingMethod = i.ShippingMethod,
+				Status = MapInvoiceStatus(i.StatusCode),
+				Notes = i.Notes ?? string.Empty,
+				PhoneNumber = i.PhoneNumber
 			})
-			.ToListAsync(cancellationToken);
+			.ToList();
 	}
 
 	public async Task<AdminProductsPageResult> GetProductsAsync(int pageNumber, int pageSize, int? categoryId, CancellationToken cancellationToken = default)
@@ -83,43 +100,48 @@ public class AdminService : IAdminService
 		pageNumber = Math.Max(1, pageNumber);
 		pageSize = Math.Max(1, pageSize);
 
-		var query = _db.Products.AsNoTracking().Include(p => p.Category).AsQueryable();
+		var allProducts = await _productRepository.GetAllAsync(cancellationToken);
+		var query = allProducts.AsQueryable();
 		if (categoryId.HasValue && categoryId.Value != 0)
 		{
 			query = query.Where(p => p.CategoryId == categoryId.Value);
 		}
 
-		var totalCount = await query.CountAsync(cancellationToken);
+		var totalCount = query.Count();
 		var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-		var products = await query
+		var products = query
 			.OrderByDescending(p => p.ProductId)
 			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
-			.Select(p => new HangHoaResponse
+			.Select(p => new ProductResponseDto
 			{
-				MaHh = p.ProductId,
-				TenHH = p.ProductName,
-				DonGia = p.Price ?? 0,
-				Hinh = p.Image ?? string.Empty,
-				MoTaNgan = p.Description ?? string.Empty,
-				TenLoai = p.Category.CategoryName,
-				GiamGia = p.Discount
+				ProductId = p.ProductId,
+				ProductName = p.ProductName,
+				AliasName = p.AliasName,
+				CategoryId = p.CategoryId,
+				UnitDescription = p.Description,
+				Price = p.Price,
+				ImageUrl = p.Image,
+				ManufactureDate = p.CreatedAt,
+				Discount = p.Discount,
+				Views = p.Views,
+				Description = p.Description,
+				Category = p.Category
 			})
-			.ToListAsync(cancellationToken);
+			.ToList();
 
-		var categories = await _db.Categories
-			.AsNoTracking()
+		var categories = (await _categoryRepository.GetAllAsync(cancellationToken))
 			.OrderBy(c => c.CategoryName)
-			.Select(c => new CategoryResponse
+			.Select(c => new CategoryDto
 			{
-				MaLoai = c.CategoryId,
-				TenLoai = c.CategoryName,
-				TenLoaiAlias = c.CategoryAlias,
-				MoTa = c.Description,
-				Hinh = c.Image
+				CategoryId = c.CategoryId,
+				CategoryName = c.CategoryName,
+				CategoryAlias = c.CategoryAlias,
+				Description = c.Description,
+				ImageUrl = c.Image
 			})
-			.ToListAsync(cancellationToken);
+			.ToList();
 
 		return new AdminProductsPageResult
 		{
@@ -134,39 +156,38 @@ public class AdminService : IAdminService
 		pageNumber = Math.Max(1, pageNumber);
 		pageSize = Math.Max(1, pageSize);
 
-		var query = _db.Customers.AsNoTracking().Include(c => c.User).AsQueryable();
+		var query = (await _customerRepository.GetAllAsync(cancellationToken)).AsQueryable();
 		if (role.HasValue)
 		{
 			query = query.Where(c => c.User.Role == role.Value);
 		}
 
-		var totalCount = await query.CountAsync(cancellationToken);
+		var totalCount = query.Count();
 		var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-		var clients = await query
+		var clients = query
 			.OrderBy(c => c.FullName)
 			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
-			.Select(c => new ClientResponse
+			.Select(c => new CustomerResponseDto
 			{
-				MaKH = c.CustomerId,
-				HoTen = c.FullName,
-				GioiTinh = c.Sex,
-				NgaySinh = c.BirthDate,
-				DiaChi = c.Address,
-				DienThoai = c.PhoneNumber,
+				CustomerId = c.CustomerId,
+				FullName = c.FullName,
+				Gender = c.Sex,
+				BirthDate = c.BirthDate,
+				Address = c.Address,
+				PhoneNumber = c.PhoneNumber,
 				Email = c.Email,
-				VaiTro = c.User.Role,
-				Hinh = c.Image
+				Role = c.User.Role,
+				ImageUrl = c.Image
 			})
-			.ToListAsync(cancellationToken);
+			.ToList();
 
-		var roles = await _db.Users
-			.AsNoTracking()
+		var roles = (await _userRepository.GetAllAsync(cancellationToken))
 			.Select(u => u.Role)
 			.Distinct()
 			.OrderBy(x => x)
-			.ToListAsync(cancellationToken);
+			.ToList();
 
 		return new AdminClientsPageResult
 		{
@@ -177,20 +198,19 @@ public class AdminService : IAdminService
 		};
 	}
 
-	public async Task<List<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken = default)
+	public async Task<List<CategoryDto>> GetCategoriesAsync(CancellationToken cancellationToken = default)
 	{
-		return await _db.Categories
-			.AsNoTracking()
+		return (await _categoryRepository.GetAllAsync(cancellationToken))
 			.OrderBy(c => c.CategoryName)
-			.Select(c => new CategoryResponse
+			.Select(c => new CategoryDto
 			{
-				MaLoai = c.CategoryId,
-				TenLoai = c.CategoryName,
-				TenLoaiAlias = c.CategoryAlias,
-				MoTa = c.Description,
-				Hinh = c.Image
+				CategoryId = c.CategoryId,
+				CategoryName = c.CategoryName,
+				CategoryAlias = c.CategoryAlias,
+				Description = c.Description,
+				ImageUrl = c.Image
 			})
-			.ToListAsync(cancellationToken);
+			.ToList();
 	}
 
 	private static string MapInvoiceStatus(int statusCode)

@@ -15,23 +15,13 @@ public interface ICustomerRepository
 	public Task<List<Customer>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get a specific customer by their unique identifier. 
+    /// Get a specific customer by their unique username. 
     /// This method retrieves detailed information about a single customer,
     /// </summary>
-    /// <param name="customerId"></param>
+    /// <param name="username"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>Customer or null if not found</returns>
-	public Task<Customer?> GetByIdAsync(string customerId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get a customer by their associated user ID. 
-    /// This method is useful for scenarios where you have the user ID (e.g., from authentication) 
-    /// and need to retrieve the corresponding customer information.
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Customer or null if not found</returns>
-	public Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default);
+	public Task<Customer?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Create a new customer in the database. This method adds a new customer record,

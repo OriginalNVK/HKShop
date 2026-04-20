@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HKShop.DTOs.GioHangItem>
+﻿@model IEnumerable<HKShop.DTOs.CartItemDto>
 @{
 	ViewData["Title"] = "Checkout";
 }
@@ -10,29 +10,29 @@
 			<div class="row g-5">
 				<div class="col-md-12 col-lg-6 col-xl-7">
 					<div class="form-check my-3">
-						<input type="checkbox" class="form-check-input" name="GiongKhachHang" value="false" id="GiongKhachHang" />
+						<input type="checkbox" class="form-check-input" name="UseCustomerProfile" value="false" id="GiongKhachHang" />
 						<label class="form-check-label" for="GiongKhachHang">Same as customer information?</label>
 					</div>
 
 					<div class="form-item">
 						<label class="form-label my-3 delivery-info">Recipient Name<sup>*</sup></label>
-						<input type="text" name="HoTen" class="form-control">
+						<input type="text" name="FullName" class="form-control">
 					</div>
 
 					<div class="form-item">
 						<label class="form-label my-3 delivery-info">Delivery Address <sup>*</sup></label>
-						<input type="text" name="DiaChi" class="form-control" placeholder="123 Main St, City, Country">
+						<input type="text" name="Address" class="form-control" placeholder="123 Main St, City, Country">
 					</div>
 
 					<div class="form-item">
 						<label class="form-label my-3 delivery-info">Phone Number<sup>*</sup></label>
-						<input type="text" name="DienThoai" class="form-control">
+						<input type="text" name="PhoneNumber" class="form-control">
 					</div>
 
 					<hr />
 
 					<div class="form-item">
-						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Other notes"></textarea>
+						<textarea name="Notes" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Other notes"></textarea>
 					</div>
 				</div>
 				<div class="col-md-12 col-lg-6 col-xl-5">
@@ -53,13 +53,13 @@
 									<tr>
 										<th scope="row">
 											<div class="d-flex align-items-center mt-2">
-												<img src="@item.Hinh" class="img-fluid rounded-circle" style="width: 90px; height: 90px;" alt="@item.TenHH">
+												<img src="@item.ImageUrl" class="img-fluid rounded-circle" style="width: 90px; height: 90px;" alt="@item.ProductName">
 											</div>
 										</th>
-										<td class="py-5">@item.TenHH</td>
-										<td class="py-5">$@item.DonGia</td>
-										<td class="py-5">@item.SoLuong</td>
-										<td class="py-5">$@item.ThanhTien</td>
+										<td class="py-5">@item.ProductName</td>
+										<td class="py-5">$@item.Price</td>
+										<td class="py-5">@item.Quantity</td>
+										<td class="py-5">$@item.LineTotal</td>
 									</tr>
 								}
 								<tr>
@@ -72,7 +72,7 @@
 									</td>
 									<td class="py-5">
 										<div class="py-3 border-bottom border-top">
-											<p class="mb-0" text-dark> $@Model.Sum(p => p.ThanhTien).ToString("#,##0.00")</p>
+											<p class="mb-0" text-dark> $@Model.Sum(p => p.LineTotal).ToString("#,##0.00")</p>
 										</div>
 									</td>
 								</tr>

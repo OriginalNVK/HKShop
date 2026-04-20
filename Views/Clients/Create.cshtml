@@ -1,4 +1,4 @@
-﻿@model HKShop.DTOs.ClientRequest
+﻿@model HKShop.DTOs.CustomerRequestDto
 @{
 	Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 	ViewBag.Title = "Create User";
@@ -17,16 +17,16 @@
 						<div class="form-group form-row">
 							<label class="col-sm-4 col-form-label">Username:</label>
 							<div class="col-sm-8">
-								<input asp-for="MaKH" class="form-control" />
-								<span asp-validation-for="MaKH" class="text-danger small"></span>
+								<input asp-for="CustomerId" class="form-control" />
+								<span asp-validation-for="CustomerId" class="text-danger small"></span>
 							</div>
 						</div>
 
 						<div class="form-group form-row">
 							<label class="col-sm-4 col-form-label">Fullname:</label>
 							<div class="col-sm-8">
-								<input asp-for="HoTen" class="form-control" />
-								<span asp-validation-for="HoTen" class="text-danger small"></span>
+								<input asp-for="FullName" class="form-control" />
+								<span asp-validation-for="FullName" class="text-danger small"></span>
 							</div>
 						</div>
 
@@ -34,24 +34,24 @@
 							<label class="col-sm-4 col-form-label">Gender:</label>
 							<div class="col-sm-8 d-flex align-items-center">
 								<div class="form-check form-check-inline">
-									<input class="form-check-input" type="radio" asp-for="GioiTinh" value="true" id="gioiTinhNam">
+									<input class="form-check-input" type="radio" asp-for="Gender" value="true" id="gioiTinhNam">
 									<label class="form-check-label" for="gioiTinhNam">Male</label>
 								</div>
 								<div class="form-check form-check-inline">
-									<input class="form-check-input" type="radio" asp-for="GioiTinh" value="false" id="gioiTinhNu">
+									<input class="form-check-input" type="radio" asp-for="Gender" value="false" id="gioiTinhNu">
 									<label class="form-check-label" for="gioiTinhNu">Female</label>
 								</div>
 							</div>
 							<div class="offset-sm-4 col-sm-8">
-								<span asp-validation-for="GioiTinh" class="text-danger small"></span>
+								<span asp-validation-for="Gender" class="text-danger small"></span>
 							</div>
 						</div>
 
 						<div class="form-group form-row">
 							<label class="col-sm-4 col-form-label">Phone Number:</label>
 							<div class="col-sm-8">
-								<input asp-for="DienThoai" class="form-control" />
-								<span asp-validation-for="DienThoai" class="text-danger small"></span>
+								<input asp-for="PhoneNumber" class="form-control" />
+								<span asp-validation-for="PhoneNumber" class="text-danger small"></span>
 							</div>
 						</div>
 					</div>
@@ -61,16 +61,16 @@
 						<div class="form-group form-row">
 							<label class="col-sm-4 col-form-label">Password:</label>
 							<div class="col-sm-8">
-								<input asp-for="MatKhau" class="form-control" type="password" />
-								<span asp-validation-for="MatKhau" class="text-danger small"></span>
+								<input asp-for="Password" class="form-control" type="password" />
+								<span asp-validation-for="Password" class="text-danger small"></span>
 							</div>
 						</div>
 
 						<div class="form-group form-row">
 							<label class="col-sm-4 col-form-label">Address:</label>
 							<div class="col-sm-8">
-								<input asp-for="DiaChi" class="form-control" placeholder="123 Main St, City, Country" />
-								<span asp-validation-for="DiaChi" class="text-danger small"></span>
+								<input asp-for="Address" class="form-control" placeholder="123 Main St, City, Country" />
+								<span asp-validation-for="Address" class="text-danger small"></span>
 							</div>
 						</div>
 
@@ -85,11 +85,11 @@
 						<div class="form-group form-row">
 							<label class="col-sm-4 col-form-label">Role:</label>
 							<div class="col-sm-8">
-								<select asp-for="VaiTro" class="form-control">
+								<select asp-for="Role" class="form-control">
 									<option value="0">User</option>
 									<option value="1">Administrator</option>
 								</select>
-								<span asp-validation-for="VaiTro" class="text-danger small"></span>
+								<span asp-validation-for="Role" class="text-danger small"></span>
 							</div>
 						</div>
 

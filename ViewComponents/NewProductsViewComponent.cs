@@ -14,24 +14,30 @@ namespace HKShop.ViewComponents
 
         public IViewComponentResult Invoke()
         {
-            var model = new CategoriesModel()
+            var model = new CategoryCollectionDto()
             {
-                Categories = db.Categories
+                CategoryGroups = db.Categories
                 .Select(l => new CategoryProducts
                 {
-                    MaLoai = l.CategoryId,
-                    TenLoai = l.CategoryName,
-                    Products = db.Products
+                    CategoryId = l.CategoryId,
+                    CategoryName = l.CategoryName,
+                    ProductItems = db.Products
                         .Where(h => h.CategoryId == l.CategoryId)
                         .OrderByDescending(h => h.CreatedAt)
                         .Take(5) // Lấy 5 sản phẩm
-                        .Select(h => new HangHoaResponse
+                        .Select(h => new ProductDto
                         {
-                            MaHh = h.ProductId,
-                            TenHH = h.ProductName,
-                            DonGia = h.Price ?? 0,
-                            Hinh = h.Image ?? "default.png",
-                            GiamGia = h.Discount
+                            ProductId = h.ProductId,
+                            ProductName = h.ProductName,
+                            Price = h.Price ?? 0,
+                            ImageUrl = h.Image ?? "default.png",
+                            Discount = h.Discount,
+                            CategoryId = h.CategoryId,
+                            Category = h.Category,
+                            ManufactureDate = h.CreatedAt,
+                            Views = h.Views,
+                            Description = h.Description,
+                            UnitDescription = h.Description
                         })
                         .ToList()
                 })

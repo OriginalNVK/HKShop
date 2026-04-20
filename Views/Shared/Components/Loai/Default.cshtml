@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HKShop.DTOs.MenuLoai>;
+﻿@model IEnumerable<HKShop.DTOs.CategoryMenuDto>
 @{
 }
 
@@ -10,8 +10,8 @@
 		@foreach (var item in Model)
 		{
 			<li>
-				<a asp-controller="HangHoa" asp-action="Index" asp-route-MaLoai="@item.MaLoai">
-					<i class="fas fa-apple-alt me-2"></i> @item.TenLoai
+                <a asp-controller="Product" asp-action="Index" asp-route-MaLoai="@item.CategoryId">
+                    <i class="fas fa-apple-alt me-2"></i> @item.CategoryName
 				</a>
 			</li>
 		}

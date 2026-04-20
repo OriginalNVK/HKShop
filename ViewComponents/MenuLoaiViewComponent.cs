@@ -11,12 +11,12 @@ namespace HKShop.ViewComponents
 
         public IViewComponentResult Invoke()
         {
-            var data = db.Categories.Select(l => new MenuLoai
+            var data = db.Categories.Select(l => new CategoryMenuDto
             {
-                MaLoai = l.CategoryId,
-                TenLoai = l.CategoryName,
-                SoLuong = l.Products.Count
-            }).OrderBy(p => p.TenLoai);
+                CategoryId = l.CategoryId,
+                CategoryName = l.CategoryName,
+                ProductCount = l.Products.Count
+            }).OrderBy(p => p.CategoryName);
 
             return View(data);
         }

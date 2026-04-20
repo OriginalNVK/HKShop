@@ -1,30 +1,30 @@
-﻿@model HKShop.DTOs.GioHangModel
+﻿@model HKShop.DTOs.CartSummaryDto
 
 <!-- Cart -->
 <div class="dropdown">
     <a class="dropdown-toggle cursor md-48" data-toggle="dropdown" aria-expanded="true">
         <i class="fa fa-shopping-cart"></i>
         <span>Cart</span>
-        <span class="qty">@Model.Quantity</span>
+        <span class="qty">@Model.TotalQuantity</span>
     </a>
     <div class="cart-dropdown">
         <div class="cart-list">
-            @if (Model.Items != null && Model.Items.Any())
+            @if (Model.CartItems != null && Model.CartItems.Any())
             {
-                @foreach (var item in Model.Items)
+				@foreach (var item in Model.CartItems)
                 {
                     <div class="product-widget">
                         <div class="product-img">
-                            <img src="@item.Hinh" alt="@item.TenHH">
+							<img src="@item.ImageUrl" alt="@item.ProductName">
                         </div>
                         <div class="product-body">
-                            <h3 class="product-name"><a href="#">@item.TenHH</a></h3>
-                            <h4 class="product-price"><span class="qty">@item.SoLuong x</span>$@item.DonGia.ToString("#,##0.00")</h4>
+							<h3 class="product-name"><a href="#">@item.ProductName</a></h3>
+							<h4 class="product-price"><span class="qty">@item.Quantity x</span>$@item.Price.ToString("#,##0.00")</h4>
                         </div>
                         <form asp-action="RemoveCart" asp-controller="Cart" method="post" style="display:inline;">
-                            <input type="hidden" name="id" value="@item.MaHH" />
+							<input type="hidden" name="id" value="@item.ProductId" />
                             <button type="submit" class="delete"
-                                    onclick="return confirm('Are you sure you want to remove @item.TenHH from the cart?');">
+									onclick="return confirm('Are you sure you want to remove @item.ProductName from the cart?');">
                                 <i class="fa fa-close"></i>
                             </button>
                         </form>
@@ -37,7 +37,7 @@
             }
         </div>
         <div class="cart-summary">
-            <small>@Model.Quantity Item(s) selected</small>
+            <small>@Model.TotalQuantity Item(s) selected</small>
             <h5>SUBTOTAL: $@Model.Total.ToString("#,##0.00")</h5>
         </div>
         <div class="cart-btns">

@@ -1,10 +1,10 @@
-﻿@model IEnumerable<HKShop.DTOs.MenuLoai>;
+﻿@model IEnumerable<HKShop.DTOs.CategoryMenuDto>
 <form class="flex-center" method="get" asp-controller="HangHoa" asp-action="Index">
     <select class="input-select d-md-none" name="MaLoai">
         <option value="0">Categories</option>
         @foreach(var item in Model)
         {
-            <option value="@item.MaLoai">@item.TenLoai</option>
+            <option value="@item.CategoryId">@item.CategoryName</option>
         }
     </select>
     <input type="search" class="input form-control p-3" placeholder="Iphone 17 pro max" aria-describedby="search-icon-1" name="keyword">

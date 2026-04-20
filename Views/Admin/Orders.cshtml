@@ -1,5 +1,5 @@
 ﻿@using HKShop.Helpers
-@model IEnumerable<HKShop.DTOs.InvoiceResponse>
+@model IEnumerable<HKShop.DTOs.InvoiceDto>
 
 @{
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
@@ -29,25 +29,25 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="text-center">@item.MaHd</td>
-                            <td class="text-center">@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="text-center">@item.HoTen</td>
-                            <td class="text-center">@item.DiaChi</td>
-                            <td class="text-center">@item.CachThanhToan</td>
-                            <td class="text-center">@item.CachVanChuyen</td>
+                            <td class="text-center">@item.InvoiceId</td>
+                            <td class="text-center">@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-center">@item.CustomerName</td>
+                            <td class="text-center">@item.Address</td>
+                            <td class="text-center">@item.PaymentMethod</td>
+                            <td class="text-center">@item.ShippingMethod</td>
                             <td class="text-center">
-                                <span class="badge-@item.TrangThai">
-                                    @Utils.convertStatus(item.TrangThai)
+                                <span class="badge-@item.Status">
+                                    @Utils.convertStatus(item.Status)
                                 </span>
                             </td>
-                            <td class="text-center">@item.DienThoai</td>
+                            <td class="text-center">@item.PhoneNumber</td>
                             <td class="text-center">
                                 <div class="btn-group d-flex justify-center gap-2" role="group">
-                                    <a asp-action="Detail" asp-controller="Orders" asp-route-id="@item.MaHd"
+                                    <a asp-action="Detail" asp-controller="Orders" asp-route-id="@item.InvoiceId"
                                        class="btn btn-sm btn-info" title="View Details">
                                         <i class="fa fa-eye"></i>
                                     </a>
-                                    <a asp-action="Delete" asp-controller="Orders" asp-route-id="@item.MaHd"
+                                    <a asp-action="Delete" asp-controller="Orders" asp-route-id="@item.InvoiceId"
                                        class="btn btn-sm btn-delete" title="Delete Order">
                                         <i class="fa fa-trash"></i>
                                     </a>

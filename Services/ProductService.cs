@@ -1,5 +1,6 @@
 using HKShop.DTOs;
 using HKShop.Models;
+using HKShop.Repositories.Interfaces;
 using HKShop.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,63 +8,45 @@ namespace HKShop.Services;
 
 public class ProductService : IProductService
 {
-	private readonly DBContext _db;
+	private readonly IProductRepository _product;
 
-	public ProductService(DBContext db)
+	public ProductService(IProductRepository product)
 	{
-		_db = db;
+		_product = product;
 	}
 
-	public async Task<List<HangHoaResponse>> GetProductsAsync(int? categoryId, string? keyword, CancellationToken cancellationToken = default)
+	public async Task<List<ProductResponseDto>> GetProductsAsync(int pageNumber = 1, int pageSize = 10, int? categoryId = null, string? keyword = null, CancellationToken cancellationToken = default)
 	{
-		var products = _db.Products.AsNoTracking().Include(p => p.Category).AsQueryable();
+		var products = await _product.GetPagedAsync(pageNumber, pageSize, categoryId, keyword, cancellationToken);
 
-		if (categoryId.HasValue && categoryId.Value != 0)
+		return products.Select(p => new ProductResponseDto
 		{
-			products = products.Where(p => p.CategoryId == categoryId.Value);
-		}
-		else if (!string.IsNullOrWhiteSpace(keyword))
-		{
-			products = products.Where(p => p.ProductName.Contains(keyword));
-		}
-
-		return await products
-			.Select(p => new HangHoaResponse
-			{
-				MaHh = p.ProductId,
-				TenHH = p.ProductName,
-				DonGia = p.Price ?? 0,
-				Hinh = p.Image ?? string.Empty,
-				MoTaNgan = p.Description ?? string.Empty,
-				TenLoai = p.Category.CategoryName,
-				GiamGia = p.Discount
-			})
-			.ToListAsync(cancellationToken);
+			ProductId = p.ProductId,
+			ProductName = p.ProductName,
+			Price = p.Price ?? 0,
+			Description = p.Description ?? string.Empty,
+			ImageUrl = p.Image ?? string.Empty,
+			Category = p.Category
+		}).ToList();
 	}
 
-	public async Task<ChiTietHangHoaResponse?> GetDetailAsync(int id, CancellationToken cancellationToken = default)
+	public async Task<ProductDetailDto?> GetDetailAsync(int id, CancellationToken cancellationToken = default)
 	{
-		var product = await _db.Products
-			.AsNoTracking()
-			.Include(p => p.Category)
-			.SingleOrDefaultAsync(p => p.ProductId == id, cancellationToken);
+		var product = await _product.GetByIdAsync(id, cancellationToken);
 
 		if (product == null)
 		{
 			return null;
 		}
 
-		return new ChiTietHangHoaResponse
+		return new ProductDetailDto
 		{
-			MaHH = product.ProductId,
-			TenHH = product.ProductName,
-			DonGia = product.Price ?? 0,
-			ChiTiet = product.Description ?? string.Empty,
-			DiemDanhGia = 5,
-			Hinh = product.Image ?? string.Empty,
-			MoTaNgan = product.Description ?? string.Empty,
-			TenLoai = product.Category.CategoryName,
-			SoLuongTon = 10
+			ProductId = product.ProductId,
+			ProductName = product.ProductName,
+			Price = product.Price ?? 0,
+			Description = product.Description ?? string.Empty,
+			ImageUrl = product.Image ?? string.Empty,
+			CategoryName = product.Category.CategoryName ?? string.Empty
 		};
 	}
 }

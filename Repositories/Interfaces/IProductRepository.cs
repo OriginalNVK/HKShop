@@ -3,13 +3,8 @@ using HKShop.Models;
 namespace HKShop.Repositories.Interfaces;
 
 public interface IProductRepository
-{
-    /// <summary>
-    /// Get all products with optional filtering by category and keyword search.
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns>List of products</returns>
-	Task<List<Product>> GetAllAsync(CancellationToken cancellationToken = default);
+{	
+    Task<List<Product>> GetAllAsync(CancellationToken cancellationToken = default);
 	
     /// <summary>
     /// Get a paginated list of products with optional filtering by category and keyword search.
@@ -20,7 +15,7 @@ public interface IProductRepository
     /// <param name="keyword"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>Page of products</returns>
-    Task<List<Product>> GetPagedAsync(int pageNumber, int pageSize, int? categoryId = null, string? keyword = null, CancellationToken cancellationToken = default);
+    Task<List<Product>> GetPagedAsync(int pageNumber = 1, int pageSize = 10, int? categoryId = null, string? keyword = null, CancellationToken cancellationToken = default);
 	
     /// <summary>
     /// Get a specific product by its unique identifier. 

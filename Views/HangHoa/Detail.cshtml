@@ -1,4 +1,4 @@
-﻿@model HKShop.DTOs.ChiTietHangHoaResponse
+﻿@model HKShop.DTOs.ProductDetailDto
 @{
     ViewData["Title"] = "Detail";
 }
@@ -11,7 +11,7 @@
                 <ul class="breadcrumb-tree">
                     <li><a href="/">Home</a></li>
                     <li><a href="/HangHoa">Hàng Hóa</a></li>
-                    <li class="active">@Model.TenHH</li>
+                    <li class="active">@Model.ProductName</li>
                 </ul>
             </div>
         </div>
@@ -26,8 +26,8 @@
             <div class="col-md-5 col-md-push-2">
                 <div id="product-main-img">
                     <div class="product-preview">
-                        <a asp-action="Detail" asp-route-id="@Model.MaHH">
-                            <img src="@Model.Hinh" alt="@Model.TenHH">
+                        <a asp-action="Detail" asp-controller="Product" asp-route-id="@Model.ProductId">
+                            <img src="@Model.ImageUrl" alt="@Model.ProductName">
                         </a>
                     </div>
                 </div>
@@ -37,7 +37,7 @@
             <div class="col-md-2 col-md-pull-5">
                 <div id="product-imgs">
                     <div class="product-preview">
-                        <img src="@Model.Hinh" alt="@Model.TenHH">
+                        <img src="@Model.ImageUrl" alt="@Model.ProductName">
                     </div>
                     <!-- Add more previews if you have additional images -->
                 </div>
@@ -46,7 +46,7 @@
             <!-- Product details -->
             <div class="col-md-5">
                 <div class="product-details">
-                    <h2 class="product-name">@Model.TenHH</h2>
+                    <h2 class="product-name">@Model.ProductName</h2>
                     <div>
                         <div class="product-rating">
                             <i class="fa fa-star text-secondary"></i>
@@ -58,13 +58,13 @@
                         <a class="review-link" href="#">2 Review(s) | Add your review</a>
                     </div>
                     <div>
-                        <h3 class="product-price">@Model.DonGia $</h3>
+                        <h3 class="product-price">@Model.Price $</h3>
                         <span class="product-available">In Stock</span>
                     </div>
-                    <p>@Model.MoTaNgan</p>
+                    <p>@Model.ShortDescription</p>
 
                     <div class="add-to-cart">
-                        <form asp-action="AddToCart" asp-controller="Cart" asp-route-id="@Model.MaHH">
+                        <form asp-action="AddToCart" asp-controller="Cart" asp-route-id="@Model.ProductId">
                             <div class="qty-label">
                                 Qty
                                 <div class="input-number">
@@ -79,7 +79,7 @@
 
                     <ul class="product-links">
                         <li>Category:</li>
-                        <li><a href="#">@Model.TenLoai</a></li>
+                        <li><a href="#">@Model.CategoryName</a></li>
                     </ul>
 
                     <ul class="product-links">
@@ -107,7 +107,7 @@
                         <div id="tab1" class="tab-pane fade in active">
                             <div class="row">
                                 <div class="col-md-12">
-                                    @Model.ChiTiet
+                                    @Model.Description
                                 </div>
                             </div>
                         </div>
@@ -206,9 +206,9 @@
                         <img src="img/vegetable-item-6.jpg" alt="">
                     </div>
                     <div class="product-body">
-                        <p class="product-category">@Model.TenLoai</p>
-                        <h3 class="product-name"><a href="#">@Model.TenHH</a></h3>
-                        <h4 class="product-price">@Model.DonGia $</h4>
+                        <p class="product-category">@Model.CategoryName</p>
+                        <h3 class="product-name"><a href="#">@Model.ProductName</a></h3>
+                        <h4 class="product-price">@Model.Price $</h4>
                         <div class="product-rating">
                             <i class="fa fa-star text-secondary"></i>
                             <i class="fa fa-star text-secondary"></i>

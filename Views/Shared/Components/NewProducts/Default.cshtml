@@ -1,4 +1,4 @@
-﻿@model HKShop.DTOs.CategoriesModel
+﻿@model HKShop.DTOs.CategoryCollectionDto
 
 <div class="section">
 	<!-- container -->
@@ -11,10 +11,10 @@
 					<h3 class="title">New Products</h3>
 					<div class="section-nav">
 						<ul class="section-tab-nav tab-nav">
-							@foreach (var item in Model.Categories)
+							@foreach (var item in Model.CategoryGroups)
 							{
-								<li class="@(Model.Categories.First() == item ? "active" : "")">
-									<a data-toggle="tab" href="#tab-@item.MaLoai">@item.TenLoai</a>
+								<li class="@(Model.CategoryGroups.First() == item ? "active" : "")">
+									<a data-toggle="tab" href="#tab-@item.CategoryId">@item.CategoryName</a>
 								</li>
 							}
 						</ul>
@@ -26,21 +26,21 @@
 			<div class="col-md-12">
 				<div class="row">
 					<div class="products-tabs">
-						@foreach (var category in Model.Categories)
+						@foreach (var category in Model.CategoryGroups)
 						{
-							<div id="tab-@category.MaLoai" class="tab-pane @(Model.Categories.First() == category ? "active" : "")">
-								<div class="products-slick" data-nav="#slick-nav-@category.MaLoai">
-									@foreach (var product in category.Products)
+							<div id="tab-@category.CategoryId" class="tab-pane @(Model.CategoryGroups.First() == category ? "active" : "")">
+								<div class="products-slick" data-nav="#slick-nav-@category.CategoryId">
+									@foreach (var product in category.ProductItems)
 									{
 										<div class="product">
 											<div class="product-img">
-												<a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@product.MaHh">
-													<img src="@product.Hinh" class="img-fluid w-small" alt="@product.TenHH">
+												<a asp-action="Detail" asp-controller="Product" asp-route-id="@product.ProductId">
+													<img src="@product.ImageUrl" class="img-fluid w-small" alt="@product.ProductName">
 												</a>
-												@if (product.GiamGia > 0)
+												@if (product.Discount > 0)
 												{
 													<div class="product-label">
-														<span class="sale">---@product.GiamGia%</span>
+														<span class="sale">---@product.Discount%</span>
 													</div>
 												}
 												<div class="product-label">
@@ -48,15 +48,15 @@
 												</div>
 											</div>
 											<div class="product-body">
-												<p class="product-category">@category.TenLoai</p>
+												<p class="product-category">@category.CategoryName</p>
 												<h3 class="product-name">
-													<a asp-controller="HangHoa" asp-action="Detail" asp-route-id="@product.MaHh">@product.TenHH</a>
+													<a asp-controller="Product" asp-action="Detail" asp-route-id="@product.ProductId">@product.ProductName</a>
 												</h3>
 												<h4 class="product-price">
-													$@((product.DonGia * (1 - product.GiamGia / 100)).ToString("#,##0.00"))
-													@if (product.GiamGia > 0)
+													$@(((product.Price ?? 0) * (1 - product.Discount / 100)).ToString("#,##0.00"))
+													@if (product.Discount > 0)
 													{
-														<del class="product-old-price">$@product.DonGia.ToString("#,##0.00")</del>
+														<del class="product-old-price">$@product.Price?.ToString("#,##0.00")</del>
 													}
 												</h4>
 												<div class="product-rating">
@@ -68,26 +68,26 @@
 													<i class="fa fa-star"></i>
 												</div>
 												<div class="product-btns d-flex gap-2 mx-1">
-													<a asp-action="AddToWishlist" asp-controller="HangHoa" asp-route-id="@product.MaHh" class="add-to-wishlist">
+													<a asp-action="AddToWishlist" asp-controller="Product" asp-route-id="@product.ProductId" class="add-to-wishlist">
 														<i class="fa fa-heart-o"></i><span class="tooltipp">Add to Wishlist</span>
 													</a>
-													<a asp-action="AddToCompare" asp-controller="HangHoa" asp-route-id="@product.MaHh" class="add-to-compare">
+													<a asp-action="AddToCompare" asp-controller="Product" asp-route-id="@product.ProductId" class="add-to-compare">
 														<i class="fa fa-exchange"></i><span class="tooltipp">Compare</span>
 													</a>
-													<a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@product.MaHh" class="quick-view">
+													<a asp-action="Detail" asp-controller="Product" asp-route-id="@product.ProductId" class="quick-view">
 														<i class="fa fa-eye"></i><span class="tooltipp">View Details</span>
 													</a>
 												</div>
 											</div>
 											<div class="add-to-cart">
-												<a asp-action="AddToCart" asp-controller="Cart" asp-route-id="@product.MaHh" class="add-to-cart-btn">
+												<a asp-action="AddToCart" asp-controller="Cart" asp-route-id="@product.ProductId" class="add-to-cart-btn">
 													<i class="fa fa-shopping-cart"></i> Add to Cart
 												</a>
 											</div>
 										</div>
 									}
 								</div>
-								<div id="slick-nav-@category.MaLoai" class="products-slick-nav"></div>
+								<div id="slick-nav-@category.CategoryId" class="products-slick-nav"></div>
 							</div>
 						}
 					</div>

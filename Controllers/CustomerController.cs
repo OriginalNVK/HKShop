@@ -23,7 +23,7 @@ namespace HKShop.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DangKy(DangKyRequest model, IFormFile? Hinh)
+        public async Task<IActionResult> DangKy(RegisterRequestDto model, IFormFile? Hinh)
         {
             if (ModelState.IsValid)
             {
@@ -48,7 +48,7 @@ namespace HKShop.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DangNhap(DangNhapRequest model, string? returnUrl)
+        public async Task<IActionResult> DangNhap(LoginRequestDto model, string? returnUrl)
         {
             ViewBag.ReturnUrl = returnUrl;
             if (ModelState.IsValid)

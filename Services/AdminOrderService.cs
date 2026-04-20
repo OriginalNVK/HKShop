@@ -1,52 +1,49 @@
 using HKShop.DTOs;
-using HKShop.Models;
+using HKShop.Repositories.Interfaces;
 using HKShop.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace HKShop.Services;
 
 public class AdminOrderService : IAdminOrderService
 {
-	private readonly DBContext _db;
+	private readonly IInvoiceRepository _invoiceRepository;
+	private readonly IDetailInvoiceRepository _detailInvoiceRepository;
 
-	public AdminOrderService(DBContext db)
+	public AdminOrderService(IInvoiceRepository invoiceRepository, IDetailInvoiceRepository detailInvoiceRepository)
 	{
-		_db = db;
+		_invoiceRepository = invoiceRepository;
+		_detailInvoiceRepository = detailInvoiceRepository;
 	}
 
-	public async Task<List<DetailInvoiceVM>> GetDetailAsync(int invoiceId, CancellationToken cancellationToken = default)
+	public async Task<List<InvoiceDetailDto>> GetDetailAsync(int invoiceId, CancellationToken cancellationToken = default)
 	{
-		return await _db.DetailInvoices
-			.AsNoTracking()
-			.Include(d => d.ProductIdNavigation)
-			.Where(d => d.InvoiceId == invoiceId)
-			.Select(d => new DetailInvoiceVM
+		var details = await _detailInvoiceRepository.GetByInvoiceIdAsync(invoiceId, cancellationToken);
+
+		return details
+			.Select(d => new InvoiceDetailDto
 			{
-				MaCt = d.DetailInvoiceId,
-				MaHd = d.InvoiceId,
-				MaHh = d.ProductId,
-				DonGia = d.Amount,
-				SoLuong = d.Quantity,
-				GiamGia = d.Discount,
-				TenHangHoa = d.ProductIdNavigation.ProductName,
-				Hinh = d.ProductIdNavigation.Image ?? string.Empty,
-				ThanhTien = d.Amount * d.Quantity
+				DetailInvoiceId = d.DetailInvoiceId,
+				InvoiceId = d.InvoiceId,
+				ProductId = d.ProductId,
+				Price = d.Amount,
+				Quantity = d.Quantity,
+				Discount = d.Discount,
+				ProductName = d.ProductIdNavigation.ProductName,
+				ProductImage = d.ProductIdNavigation.Image ?? string.Empty,
+				TotalAmount = d.Amount * d.Quantity
 			})
-			.ToListAsync(cancellationToken);
+			.ToList();
 	}
 
 	public async Task<ServiceResult> DeleteAsync(int invoiceId, CancellationToken cancellationToken = default)
 	{
-		var invoice = await _db.Invoices.FirstOrDefaultAsync(h => h.InvoiceId == invoiceId, cancellationToken);
+		var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
 		if (invoice == null)
 		{
 			return ServiceResult.Fail("Order not found");
 		}
 
-		var details = await _db.DetailInvoices.Where(c => c.InvoiceId == invoiceId).ToListAsync(cancellationToken);
-		_db.DetailInvoices.RemoveRange(details);
-		_db.Invoices.Remove(invoice);
-		await _db.SaveChangesAsync(cancellationToken);
+		await _invoiceRepository.DeleteAsync(invoiceId, cancellationToken);
 		return ServiceResult.Ok("Delete order successfully");
 	}
 
@@ -57,27 +54,20 @@ public class AdminOrderService : IAdminOrderService
 			return ServiceResult.Fail("Delivery date cannot be in the past");
 		}
 
-		await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-		try
+		var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
+		if (invoice == null)
 		{
-			var invoice = await _db.Invoices.SingleOrDefaultAsync(h => h.InvoiceId == invoiceId, cancellationToken);
-			if (invoice == null)
-			{
-				return ServiceResult.Fail("Order not found");
-			}
-
-			invoice.DeliveryDate = DateOnly.FromDateTime(deliveryDate);
-			invoice.StatusCode = 2;
-			invoice.AdminId = adminId;
-
-			await _db.SaveChangesAsync(cancellationToken);
-			await transaction.CommitAsync(cancellationToken);
-			return ServiceResult.Ok("Order confirmed successfully");
+			return ServiceResult.Fail("Order not found");
 		}
-		catch
+
+		var updatedStatus = await _invoiceRepository.UpdateStatusAsync(invoiceId, 2, DateOnly.FromDateTime(deliveryDate), cancellationToken);
+		var assignedAdmin = await _invoiceRepository.AssignAdminAsync(invoiceId, adminId, cancellationToken);
+
+		if (!updatedStatus || !assignedAdmin)
 		{
-			await transaction.RollbackAsync(cancellationToken);
 			return ServiceResult.Fail("There was an error confirming the order");
 		}
+
+		return ServiceResult.Ok("Order confirmed successfully");
 	}
 }

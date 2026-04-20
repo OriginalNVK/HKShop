@@ -1,4 +1,4 @@
-﻿@model HKShop.DTOs.ProductsResponse
+﻿@model HKShop.DTOs.ProductResponseDto
 @{
 	Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 	ViewBag.Title = "Chi tiết đơn hàng";
@@ -10,7 +10,7 @@
 		<div class="col-md-5 col-md-push-2">
 			<div id="product-main-img">
 				<div class="product-preview">
-					<img src="@Model.Hinh" class="img-fluid" alt="@Model.TenHh">
+					<img src="@Model.ImageUrl" class="img-fluid" alt="@Model.ProductName">
 				</div>
 			</div>
 		</div>
@@ -19,7 +19,7 @@
 		<div class="col-md-2 col-md-pull-5">
 			<div id="product-imgs">
 				<div class="product-preview">
-					<img src="@Model.Hinh" alt="@Model.TenHh">
+					<img src="@Model.ImageUrl" alt="@Model.ProductName">
 				</div>
 				<!-- Có thể thêm ảnh phụ nếu có -->
 			</div>
@@ -28,7 +28,7 @@
 		<!-- Product details -->
 		<div class="col-md-5">
 			<div class="product-details">
-				<h2 class="product-name">@Model.TenHh</h2>
+				<h2 class="product-name">@Model.ProductName</h2>
 
 				<!-- Rating -->
 				<div>
@@ -44,24 +44,24 @@
 
 				<!-- Price & Stock -->
 				<div>
-					<h3 class="product-price">@Model.DonGia?.ToString("N0") đ</h3>
-					@if (Model.GiamGia > 0)
+					<h3 class="product-price">@Model.Price?.ToString("N0") đ</h3>
+					@if (Model.Discount > 0)
 					{
-						<span class="product-old-price">@((Model.DonGia / (1 - Model.GiamGia)))?.ToString("N0") đ</span>
-						<span class="product-discount">-@Model.GiamGia.ToString("P0")</span>
+						<span class="product-old-price">@((Model.Price / (1 - Model.Discount / 100m)))?.ToString("N0") đ</span>
+						<span class="product-discount">-@Model.Discount.ToString("N0")%</span>
 					}
 					<span class="product-available">Còn hàng</span>
 				</div>
 
-				<p>@Model.MoTaDonVi</p>
+				<p>@Model.UnitDescription</p>
 
 				<!-- Thông tin bổ sung từ phiên bản đầu -->
 				<div class="product-meta">
-					<p><strong>Mã sản phẩm:</strong> @Model.MaHh</p>
-					<p><strong>Loại hàng hóa:</strong> @Model.MaLoaiNavigation?.Tenloai</p>
-					<p><strong>Ngày sản xuất:</strong> @Model.NgaySx.ToString("dd/MM/yyyy")</p>
-					<p><strong>Lượt xem:</strong> @Model.LuotMua</p>
-					<p><strong>Mô tả đơn vị:</strong> @Model.MoTaDonVi</p>
+					<p><strong>Mã sản phẩm:</strong> @Model.ProductId</p>
+					<p><strong>Loại hàng hóa:</strong> @((Model.Category as HKShop.Models.Category)?.CategoryName)</p>
+					<p><strong>Ngày sản xuất:</strong> @Model.ManufactureDate.ToString("dd/MM/yyyy")</p>
+					<p><strong>Lượt xem:</strong> @Model.Views</p>
+					<p><strong>Mô tả đơn vị:</strong> @Model.UnitDescription</p>
 				</div>
 
 				<!-- Share -->
@@ -90,7 +90,7 @@
 					<!-- tab1: Description -->
 					<div id="tab1" class="tab-pane fade in active">
 						<div class="col-md-12">
-							@Html.Raw(Model.MoTa ?? "Không có mô tả chi tiết")
+							@Html.Raw(Model.Description ?? "Không có mô tả chi tiết")
 						</div>
 					</div>
 
@@ -102,15 +102,15 @@
 								<table class="table">
 									<tr>
 										<td>Mã sản phẩm</td>
-										<td>@Model.MaHh</td>
+										<td>@Model.ProductId</td>
 									</tr>
 									<tr>
 										<td>Tên alias</td>
-										<td>@Model.TenAlias</td>
+										<td>@Model.AliasName</td>
 									</tr>
 									<tr>
 										<td>Loại sản phẩm</td>
-										<td>@Model.MaLoaiNavigation?.Tenloai</td>
+										<td>@((Model.Category as HKShop.Models.Category)?.CategoryName)</td>
 									</tr>
 								</table>
 							</div>
@@ -119,7 +119,7 @@
 								<table class="table">
 									<tr>
 										<td>Ngày sản xuất</td>
-										<td>@Model.NgaySx.ToString("dd/MM/yyyy")</td>
+										<td>@Model.ManufactureDate.ToString("dd/MM/yyyy")</td>
 									</tr>
 								</table>
 							</div>

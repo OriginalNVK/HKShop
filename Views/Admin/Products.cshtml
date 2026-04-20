@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HKShop.DTOs.HangHoaResponse>
+﻿@model IEnumerable<HKShop.DTOs.ProductResponseDto>
 @{
 	Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 	ViewBag.Title = "Product Management";
@@ -67,25 +67,25 @@
 					@foreach (var item in Model)
 					{
 						<tr class="align-middle">
-							<td class="text-center align-middle">@item.MaHh</td>
+							<td class="text-center align-middle">@item.ProductId</td>
 							<td class="text-center align-middle">
-								<img src="@item.Hinh" alt="@item.TenHH" class="product-image">
+								<img src="@item.ImageUrl" alt="@item.ProductName" class="product-image">
 							</td>
-							<td class="text-center align-middle">@item.TenHH</td>
-							<td class="text-center align-middle">@item.TenLoai</td>
-							<td class="text-center align-middle">@item.DonGia</td>
-							<td class="text-center align-middle">@item.GiamGia</td>
+							<td class="text-center align-middle">@item.ProductName</td>
+							<td class="text-center align-middle">@((item.Category as HKShop.Models.Category)?.CategoryName)</td>
+							<td class="text-center align-middle">@item.Price</td>
+							<td class="text-center align-middle">@item.Discount</td>
 							<td class="text-center align-middle">
 								<div class="btn-group flex-center gap-2" role="group">
-									<a asp-action="Detail" asp-controller="Products" asp-route-id="@item.MaHh"
+									<a asp-action="Detail" asp-controller="Products" asp-route-id="@item.ProductId"
 									   class="btn btn-sm btn-info" title="Xem chi tiết">
 										<i class="fa fa-eye"></i>
 									</a>
-									<a asp-action="Update" asp-controller="Products" asp-route-id="@item.MaHh"
+									<a asp-action="Update" asp-controller="Products" asp-route-id="@item.ProductId"
 									   class="btn btn-sm btn-warning" title="Chỉnh sửa hàng hóa">
 										<i class="fa fa-edit"></i>
 									</a>
-									<a asp-action="Delete" asp-controller="Products" asp-route-id="@item.MaHh"
+									<a asp-action="Delete" asp-controller="Products" asp-route-id="@item.ProductId"
 									   class="btn btn-sm btn-delete" title="Xóa đơn hàng">
 										<i class="fa fa-trash"></i>
 									</a>

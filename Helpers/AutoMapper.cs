@@ -8,19 +8,19 @@ namespace HKShop.Helpers
     {
         public AutoMapper()
         {
-            CreateMap<ClientRequest, Customer>()
-                .ForMember(d => d.CustomerId, opt => opt.MapFrom(s => s.MaKH))
-                .ForMember(d => d.FullName, opt => opt.MapFrom(s => s.HoTen))
-                .ForMember(d => d.Sex, opt => opt.MapFrom(s => s.GioiTinh))
-                .ForMember(d => d.BirthDate, opt => opt.MapFrom(s => s.NgaySinh))
-                .ForMember(d => d.Address, opt => opt.MapFrom(s => s.DiaChi))
-                .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(s => s.DienThoai))
+            CreateMap<CustomerRequestDto, Customer>()
+                .ForMember(d => d.CustomerId, opt => opt.MapFrom(s => s.CustomerId))
+                .ForMember(d => d.FullName, opt => opt.MapFrom(s => s.FullName))
+                .ForMember(d => d.Sex, opt => opt.MapFrom(s => s.Gender))
+                .ForMember(d => d.BirthDate, opt => opt.MapFrom(s => s.BirthDate))
+                .ForMember(d => d.Address, opt => opt.MapFrom(s => s.Address))
+                .ForMember(d => d.PhoneNumber, opt => opt.MapFrom(s => s.PhoneNumber))
                 .ForMember(d => d.Email, opt => opt.MapFrom(s => s.Email))
-                .ForMember(d => d.Image, opt => opt.MapFrom(s => s.Hinh));
+                .ForMember(d => d.Image, opt => opt.MapFrom(s => s.ImageUrl));
 
-            CreateMap<ClientRequest, User>()
-                .ForMember(d => d.Username, opt => opt.MapFrom(s => s.MaKH))
-                .ForMember(d => d.Role, opt => opt.MapFrom(s => s.VaiTro));
+            CreateMap<CustomerRequestDto, User>()
+                .ForMember(d => d.Username, opt => opt.MapFrom(s => s.CustomerId))
+                .ForMember(d => d.Role, opt => opt.MapFrom(s => s.Role));
         }
     }
 }

@@ -81,7 +81,7 @@ namespace HKShop.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Checkout(CheckoutVM model)
+        public async Task<IActionResult> Checkout(CheckoutRequestDto model)
         {
             var customerID = HttpContext.User.Claims.SingleOrDefault(p => p.Type == Constants.CLAIM_CUSTOMERID)?.Value;
             if (string.IsNullOrWhiteSpace(customerID))

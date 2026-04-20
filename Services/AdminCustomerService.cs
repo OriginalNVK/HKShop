@@ -1,25 +1,27 @@
 using HKShop.DTOs;
 using HKShop.Helpers;
 using HKShop.Models;
+using HKShop.Repositories.Interfaces;
 using HKShop.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace HKShop.Services;
 
 public class AdminCustomerService : IAdminCustomerService
 {
-	private readonly DBContext _db;
+	private readonly IUserRepository _userRepository;
+	private readonly ICustomerRepository _customerRepository;
 	private readonly ICloudinaryService _cloudinaryService;
 
-	public AdminCustomerService(DBContext db, ICloudinaryService cloudinaryService)
+	public AdminCustomerService(IUserRepository userRepository, ICustomerRepository customerRepository, ICloudinaryService cloudinaryService)
 	{
-		_db = db;
+		_userRepository = userRepository;
+		_customerRepository = customerRepository;
 		_cloudinaryService = cloudinaryService;
 	}
 
-	public async Task<ServiceResult> CreateUserAsync(ClientRequest client, IFormFile? image, CancellationToken cancellationToken = default)
+	public async Task<ServiceResult> CreateUserAsync(CustomerRequestDto client, IFormFile? image, CancellationToken cancellationToken = default)
 	{
-		if (await _db.Users.AnyAsync(u => u.Username == client.MaKH, cancellationToken))
+		if (await _userRepository.UsernameExistsAsync(client.CustomerId, cancellationToken))
 		{
 			return ServiceResult.Fail("Username already exists");
 		}
@@ -27,26 +29,25 @@ public class AdminCustomerService : IAdminCustomerService
 		var randomKey = Utils.GenerateRandomKey();
 		var user = new User
 		{
-			Username = client.MaKH,
+			Username = client.CustomerId,
 			CreatedAt = DateTime.Now,
 			RandomKey = randomKey,
-			Password = (client.MatKhau ?? "123456").ToMd5Hash(randomKey),
-			Role = client.VaiTro,
+			Password = (client.Password ?? "123456").ToMd5Hash(randomKey),
+			Role = client.Role,
 			IsActive = true
 		};
 
-		await _db.Users.AddAsync(user, cancellationToken);
-		await _db.SaveChangesAsync(cancellationToken);
+		await _userRepository.CreateAsync(user, cancellationToken);
 
 		var customer = new Customer
 		{
-			CustomerId = client.MaKH,
+			CustomerId = client.CustomerId,
 			UserId = user.Id,
-			FullName = client.HoTen,
-			Sex = client.GioiTinh,
-			BirthDate = client.NgaySinh,
-			Address = client.DiaChi,
-			PhoneNumber = client.DienThoai,
+			FullName = client.FullName,
+			Sex = client.Gender,
+			BirthDate = client.BirthDate,
+			Address = client.Address,
+			PhoneNumber = client.PhoneNumber,
 			Email = client.Email
 		};
 
@@ -55,53 +56,47 @@ public class AdminCustomerService : IAdminCustomerService
 			customer.Image = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_CUSTOMER);
 		}
 
-		await _db.Customers.AddAsync(customer, cancellationToken);
-		await _db.SaveChangesAsync(cancellationToken);
+		await _customerRepository.CreateAsync(customer, cancellationToken);
 		return ServiceResult.Ok("Create user successfully");
 	}
 
-	public async Task<ClientResponse?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+	public async Task<CustomerResponseDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
 	{
-		var customer = await _db.Customers
-			.AsNoTracking()
-			.Include(c => c.User)
-			.FirstOrDefaultAsync(c => c.CustomerId == id, cancellationToken);
+		var customer = await _customerRepository.GetByUsernameAsync(id, cancellationToken);
 
 		if (customer == null)
 		{
 			return null;
 		}
 
-		return new ClientResponse
+		return new CustomerResponseDto
 		{
-			MaKH = customer.CustomerId,
-			HoTen = customer.FullName,
-			GioiTinh = customer.Sex,
-			NgaySinh = customer.BirthDate,
-			DiaChi = customer.Address,
-			DienThoai = customer.PhoneNumber,
+			CustomerId = customer.CustomerId,
+			FullName = customer.FullName,
+			Gender = customer.Sex,
+			BirthDate = customer.BirthDate,
+			Address = customer.Address,
+			PhoneNumber = customer.PhoneNumber,
 			Email = customer.Email,
-			VaiTro = customer.User.Role,
-			Hinh = customer.Image
+			Role = customer.User.Role,
+			ImageUrl = customer.Image
 		};
 	}
 
-	public async Task<ServiceResult> UpdateAsync(ClientRequest client, IFormFile? image, CancellationToken cancellationToken = default)
+	public async Task<ServiceResult> UpdateAsync(CustomerRequestDto client, IFormFile? image, CancellationToken cancellationToken = default)
 	{
-		var customer = await _db.Customers
-			.Include(c => c.User)
-			.FirstOrDefaultAsync(c => c.CustomerId == client.MaKH, cancellationToken);
+		var customer = await _customerRepository.GetByUsernameAsync(client.CustomerId, cancellationToken);
 
 		if (customer == null)
 		{
 			return ServiceResult.Fail("User not found");
 		}
 
-		customer.FullName = client.HoTen;
-		customer.Sex = client.GioiTinh;
-		customer.BirthDate = client.NgaySinh;
-		customer.Address = client.DiaChi;
-		customer.PhoneNumber = client.DienThoai;
+		customer.FullName = client.FullName;
+		customer.Sex = client.Gender;
+		customer.BirthDate = client.BirthDate;
+		customer.Address = client.Address;
+		customer.PhoneNumber = client.PhoneNumber;
 		customer.Email = client.Email;
 
 		if (image != null && image.Length > 0)
@@ -109,27 +104,27 @@ public class AdminCustomerService : IAdminCustomerService
 			customer.Image = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_CUSTOMER);
 		}
 
-		customer.User.Role = client.VaiTro;
-		await _db.SaveChangesAsync(cancellationToken);
+		customer.User.Role = client.Role;
+		var updatedCustomer = await _customerRepository.UpdateAsync(customer, cancellationToken);
+		var updatedUser = await _userRepository.UpdateAsync(customer.User, cancellationToken);
+		if (!updatedCustomer || !updatedUser)
+		{
+			return ServiceResult.Fail("Update failed");
+		}
+
 		return ServiceResult.Ok("Update user successfully");
 	}
 
 	public async Task<ServiceResult> DeleteAsync(string id, CancellationToken cancellationToken = default)
 	{
-		var customer = await _db.Customers.FirstOrDefaultAsync(c => c.CustomerId == id, cancellationToken);
+		var customer = await _customerRepository.GetByUsernameAsync(id, cancellationToken);
 		if (customer == null)
 		{
 			return ServiceResult.Fail("User not found");
 		}
 
-		var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == customer.UserId, cancellationToken);
-		_db.Customers.Remove(customer);
-		if (user != null)
-		{
-			_db.Users.Remove(user);
-		}
-
-		await _db.SaveChangesAsync(cancellationToken);
+		await _customerRepository.DeleteAsync(id, cancellationToken);
+		await _userRepository.DeleteAsync(customer.UserId, cancellationToken);
 		return ServiceResult.Ok("Delete user successfully");
 	}
 }

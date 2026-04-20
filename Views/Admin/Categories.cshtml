@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HKShop.DTOs.CategoryResponse>
+﻿@model IEnumerable<HKShop.DTOs.CategoryDto>
 
 @{
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
@@ -25,14 +25,14 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="text-center">@item.MaLoai</td>
-                            <td class="text-center"><img src=@item.Hinh alt=@item.TenLoai width="120" height="110"></td>
-                            <td class="text-center">@item.TenLoai</td>
-                            <td class="text-center">@item.TenLoaiAlias</td>
-                            <td class="text-center">@item.MoTa</td>
+                            <td class="text-center">@item.CategoryId</td>
+                            <td class="text-center"><img src=@item.ImageUrl alt=@item.CategoryName width="120" height="110"></td>
+                            <td class="text-center">@item.CategoryName</td>
+                            <td class="text-center">@item.CategoryAlias</td>
+							<td class="text-center">@item.Description</td>
                             <td class="text-center">
                                 <div class="btn-group d-flex justify-center gap-2" role="group">
-                                    <a asp-action="Delete" asp-controller="Categories" asp-route-id="@item.MaLoai"
+                                                <a asp-action="Delete" asp-controller="Categories" asp-route-id="@item.CategoryId"
                                        class="btn btn-sm btn-delete" title="Delete category">
                                         <i class="fa fa-trash"></i>
                                     </a>

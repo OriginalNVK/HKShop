@@ -68,6 +68,13 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 		return true;
 	}
 
+	public async Task<bool> ExistsByProductIdAsync(int productId, CancellationToken cancellationToken = default)
+	{
+		return await _context.DetailInvoices
+			.AsNoTracking()
+			.AnyAsync(d => d.ProductId == productId, cancellationToken);
+	}
+
 	public async Task<decimal> GetInvoiceSubTotalAsync(int invoiceId, CancellationToken cancellationToken = default)
 	{
 		return await _context.DetailInvoices

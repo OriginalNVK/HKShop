@@ -18,27 +18,27 @@ namespace HKShop.ViewComponents
             var maKH = HttpContext.User.Identity.IsAuthenticated ? HttpContext.User.FindFirst(Constants.CLAIM_CUSTOMERID)?.Value : null;
             if (maKH == null)
             {
-                return View(new GioHangModel
+                return View(new CartSummaryDto
                 {
-                    Quantity = 0,
+                    TotalQuantity = 0,
                     Total = 0,
-                    Items = new List<GioHangItem>()
+                    CartItems = new List<CartItemDto>()
                 });
             }
 
-            var gioHangItems = context.Carts.Where(c => c.CustomerId == maKH).Select(c => new GioHangItem
+            var gioHangItems = context.Carts.Where(c => c.CustomerId == maKH).Select(c => new CartItemDto
             {
-                MaHH = c.ProductId,
-                TenHH = c.ProductIdNavigation.ProductName,
-                DonGia = c.Amount,
-                SoLuong = c.Quantity,
-                Hinh = c.ProductIdNavigation.Image
+                ProductId = c.ProductId,
+                ProductName = c.ProductIdNavigation.ProductName,
+                Price = c.Amount,
+                Quantity = c.Quantity,
+                ImageUrl = c.ProductIdNavigation.Image ?? string.Empty
             }).ToList();
-            return View(new GioHangModel()
+            return View(new CartSummaryDto()
             {
-                Quantity = gioHangItems.Sum(p => p.SoLuong),
-                Total = (decimal)gioHangItems.Sum(p => p.ThanhTien),
-                Items = gioHangItems
+                TotalQuantity = gioHangItems.Sum(p => p.Quantity),
+                Total = gioHangItems.Sum(p => p.LineTotal),
+                CartItems = gioHangItems
             });
         }
     }

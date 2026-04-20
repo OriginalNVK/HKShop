@@ -9,6 +9,4 @@ public class ProductDetailDto
     public string ShortDescription { get; set; } = null!;
     public string CategoryName { get; set; } = null!;
     public string Description { get; set; } = null!;
-    public int RatingScore { get; set; }
-    public int StockQuantity { get; set; }
 }
