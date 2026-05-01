@@ -1,47 +1,47 @@
-﻿using HKShop.Models;
-using HKShop.DTOs;
+﻿using HKShop.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using HKShop.Repositories.Interfaces;
+
 namespace HKShop.ViewComponents
 {
     public class NewProductsViewComponent : ViewComponent
     {
-        private readonly DBContext db;
+        private readonly ICategoryRepository _categoryRepository;
+        private readonly IProductRepository _productRepository;
 
-        public NewProductsViewComponent(DBContext db)
+        public NewProductsViewComponent(ICategoryRepository categoryRepository, IProductRepository productRepository)
         {
-            this.db = db;
+            _categoryRepository = categoryRepository;
+            _productRepository = productRepository;
         }
 
-        public IViewComponentResult Invoke()
+        public async Task<IViewComponentResult> InvokeAsync()
         {
-            var model = new CategoryCollectionDto()
+            var categories = await _categoryRepository.GetAllAsync(default);
+            var products = await _productRepository.GetAllAsync(default);
+
+            var model = new CategoriesModel()
             {
-                CategoryGroups = db.Categories
-                .Select(l => new CategoryProducts
-                {
-                    CategoryId = l.CategoryId,
-                    CategoryName = l.CategoryName,
-                    ProductItems = db.Products
-                        .Where(h => h.CategoryId == l.CategoryId)
-                        .OrderByDescending(h => h.CreatedAt)
-                        .Take(5) // Lấy 5 sản phẩm
-                        .Select(h => new ProductDto
-                        {
-                            ProductId = h.ProductId,
-                            ProductName = h.ProductName,
-                            Price = h.Price ?? 0,
-                            ImageUrl = h.Image ?? "default.png",
-                            Discount = h.Discount,
-                            CategoryId = h.CategoryId,
-                            Category = h.Category,
-                            ManufactureDate = h.CreatedAt,
-                            Views = h.Views,
-                            Description = h.Description,
-                            UnitDescription = h.Description
-                        })
-                        .ToList()
-                })
-                .ToList()
+                Categories = categories
+                    .Select(l => new CategoryProducts
+                    {
+                        MaLoai = l.CategoryId,
+                        TenLoai = l.CategoryName,
+                        Products = products
+                            .Where(h => h.CategoryId == l.CategoryId)
+                            .OrderByDescending(h => h.CreatedAt)
+                            .Take(5)
+                            .Select(h => new ProductResponseDto
+                            {
+                                ProductId = h.ProductId,
+                                ProductName = h.ProductName,
+                                Price = h.Price ?? 0,
+                                ImageUrl = h.Image ?? "default.png",
+                                Discount = h.Discount
+                            })
+                            .ToList()
+                    })
+                    .ToList()
             };
 
             return View(model);

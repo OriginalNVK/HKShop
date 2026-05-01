@@ -1,12 +1,12 @@
-using AutoMapper;
 using HKShop.Models;
 using HKShop.DTOs;
+using AutoMapper;
 
 namespace HKShop.Helpers
 {
-    public class AutoMapper : Profile
+    public class CustomMapper : Profile
     {
-        public AutoMapper()
+        public CustomMapper()
         {
             CreateMap<CustomerRequestDto, Customer>()
                 .ForMember(d => d.CustomerId, opt => opt.MapFrom(s => s.CustomerId))

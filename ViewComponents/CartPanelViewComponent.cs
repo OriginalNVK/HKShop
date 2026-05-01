@@ -1,44 +1,45 @@
-using HKShop.Models;
 using HKShop.Helpers;
 using HKShop.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using HKShop.Repositories.Interfaces;
 
 namespace HKShop.ViewComponents
 {
     public class CartPanelViewComponent : ViewComponent
     {
-        private readonly DBContext context;
+        private readonly ICartRepository _cartRepository;
 
-        public CartPanelViewComponent(DBContext context)
+        public CartPanelViewComponent(ICartRepository cartRepository)
         {
-            this.context = context;
+            _cartRepository = cartRepository;
         }
-        public IViewComponentResult Invoke()
+        public async Task<IViewComponentResult> InvokeAsync()
         {
             var maKH = HttpContext.User.Identity.IsAuthenticated ? HttpContext.User.FindFirst(Constants.CLAIM_CUSTOMERID)?.Value : null;
             if (maKH == null)
             {
-                return View(new CartSummaryDto
+                return View(new GioHangModel
                 {
-                    TotalQuantity = 0,
+                    Quantity = 0,
                     Total = 0,
-                    CartItems = new List<CartItemDto>()
+                    Items = new List<GioHangItem>()
                 });
             }
 
-            var gioHangItems = context.Carts.Where(c => c.CustomerId == maKH).Select(c => new CartItemDto
+            var carts = await _cartRepository.GetByCustomerIdAsync(maKH);
+            var gioHangItems = carts.Select(c => new GioHangItem
             {
-                ProductId = c.ProductId,
-                ProductName = c.ProductIdNavigation.ProductName,
-                Price = c.Amount,
-                Quantity = c.Quantity,
-                ImageUrl = c.ProductIdNavigation.Image ?? string.Empty
+                MaHH = c.ProductId,
+                TenHH = c.ProductIdNavigation.ProductName,
+                DonGia = c.Amount,
+                SoLuong = c.Quantity,
+                Hinh = c.ProductIdNavigation.Image
             }).ToList();
-            return View(new CartSummaryDto()
+            return View(new GioHangModel()
             {
-                TotalQuantity = gioHangItems.Sum(p => p.Quantity),
-                Total = gioHangItems.Sum(p => p.LineTotal),
-                CartItems = gioHangItems
+                Quantity = gioHangItems.Sum(p => p.SoLuong),
+                Total = (decimal)gioHangItems.Sum(p => p.ThanhTien),
+                Items = gioHangItems
             });
         }
     }

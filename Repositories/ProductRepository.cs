@@ -22,7 +22,7 @@ public class ProductRepository : IProductRepository
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<List<Product>> GetPagedAsync(int pageNumber = 1, int pageSize = 10, int? categoryId = null, string? keyword = null, CancellationToken cancellationToken = default)
+	public async Task<List<Product>> GetPagedAsync(int pageNumber, int pageSize, int? categoryId = null, string? keyword = null, CancellationToken cancellationToken = default)
 	{
 		var query = _context.Products
 			.AsNoTracking()

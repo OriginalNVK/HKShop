@@ -51,12 +51,12 @@ namespace HKShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateProduct(ProductRequestDto product,
-            IFormFile? image)
+        public async Task<IActionResult> CreateProduct([Bind("MaHh,TenHh,TenAlias,MaLoai,MoTaDonVi,DonGia,NgaySx,GiamGia,LuotMua,MoTa")] ProductsRequest hangHoa,
+            IFormFile Hinh)
         {
             if (ModelState.IsValid)
             {
-				var result = await _adminProductService.CreateAsync(product, image);
+                var result = await _adminProductService.CreateAsync(hangHoa, Hinh);
                 if (result.Success)
                 {
                     return Redirect("/admin/products");
@@ -66,8 +66,8 @@ namespace HKShop.Controllers
             }
 
             var categories = await _adminProductService.GetCategoriesAsync();
-            ViewData["Maloai"] = new SelectList(categories, "CategoryId", "CategoryName", product.CategoryId);
-            return View("Create", product);
+            ViewData["Maloai"] = new SelectList(categories, "CategoryId", "CategoryName", hangHoa.MaLoai);
+            return View("Create", hangHoa);
         }
 
         // GET: HangHoas/Edit/5
@@ -86,7 +86,7 @@ namespace HKShop.Controllers
             }
 
             var categories = await _adminProductService.GetCategoriesAsync();
-			ViewData["MaLoai"] = new SelectList(categories, "CategoryId", "CategoryName", product.CategoryId);
+            ViewData["MaLoai"] = new SelectList(categories, "CategoryId", "CategoryName", product.MaLoai);
             return View(product);
         }
 
@@ -95,9 +95,9 @@ namespace HKShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ProductRequestDto product)
+        public async Task<IActionResult> Edit(int id, [Bind("MaHh,TenHh,TenAlias,MaLoai,MoTaDonVi,DonGia,Hinh,NgaySx,GiamGia,LuotMua,MoTa")] ProductsRequest product)
         {
-			if (id != product.ProductId)
+            if (id != product.MaHh)
             {
                 return NotFound();
             }

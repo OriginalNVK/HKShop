@@ -1,5 +1,5 @@
 namespace HKShop.DTOs;
 
-public class ProductDto : ProductResponseDto
+public class ProductDto : HangHoaResponse
 {
 }

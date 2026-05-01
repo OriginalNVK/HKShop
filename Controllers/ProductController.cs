@@ -11,7 +11,7 @@ namespace HKShop.Controllers
         public ProductController(IProductService productService) => _productService = productService;
         public async Task<IActionResult> Index(int? MaLoai, string? keyword)
         {
-			var result = await _productService.GetProductsAsync(categoryId: MaLoai, keyword: keyword);
+            var result = await _productService.GetProductsAsync(MaLoai, keyword);
             return View(result);
         }
 

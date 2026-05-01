@@ -1,80 +1,75 @@
 using HKShop.DTOs;
 using HKShop.Helpers;
 using HKShop.Models;
-using HKShop.Repositories.Interfaces;
 using HKShop.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace HKShop.Services;
 
 public class AdminProductService : IAdminProductService
 {
-	private readonly IProductRepository _productRepository;
-	private readonly ICategoryRepository _categoryRepository;
-	private readonly IDetailInvoiceRepository _detailInvoiceRepository;
+	private readonly DBContext _db;
 	private readonly ICloudinaryService _cloudinaryService;
 
-	public AdminProductService(
-		IProductRepository productRepository,
-		ICategoryRepository categoryRepository,
-		IDetailInvoiceRepository detailInvoiceRepository,
-		ICloudinaryService cloudinaryService)
+	public AdminProductService(DBContext db, ICloudinaryService cloudinaryService)
 	{
-		_productRepository = productRepository;
-		_categoryRepository = categoryRepository;
-		_detailInvoiceRepository = detailInvoiceRepository;
+		_db = db;
 		_cloudinaryService = cloudinaryService;
 	}
 
-	public async Task<ProductResponseDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+	public async Task<ProductsResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
 	{
-		var product = await _productRepository.GetByIdAsync(id, cancellationToken);
+		var product = await _db.Products
+			.AsNoTracking()
+			.Include(p => p.Category)
+			.FirstOrDefaultAsync(p => p.ProductId == id, cancellationToken);
 
 		if (product == null)
 		{
 			return null;
 		}
 
-		return new ProductResponseDto
+		return new ProductsResponse
 		{
-			ProductId = product.ProductId,
-			ProductName = product.ProductName,
-			AliasName = product.AliasName,
-			CategoryId = product.CategoryId,
-			UnitDescription = product.Description,
-			Price = product.Price,
-			ImageUrl = product.Image,
-			ManufactureDate = product.CreatedAt,
-			Discount = product.Discount,
-			Views = product.Views,
-			Description = product.Description,
-			Category = product.Category
+			MaHh = product.ProductId,
+			TenHh = product.ProductName,
+			TenAlias = product.AliasName,
+			MaLoai = product.CategoryId,
+			MoTaDonVi = product.Description,
+			DonGia = product.Price,
+			Hinh = product.Image,
+			NgaySx = product.CreatedAt,
+			GiamGia = product.Discount,
+			LuotMua = product.Views,
+			MoTa = product.Description,
+			MaLoaiNavigation = product.Category
 		};
 	}
 
 	public async Task<List<Category>> GetCategoriesAsync(CancellationToken cancellationToken = default)
 	{
-		return await _categoryRepository.GetAllAsync(cancellationToken);
+		return await _db.Categories.AsNoTracking().OrderBy(c => c.CategoryName).ToListAsync(cancellationToken);
 	}
 
-	public async Task<ServiceResult> CreateAsync(ProductRequestDto product, IFormFile? image, CancellationToken cancellationToken = default)
+	public async Task<ServiceResult> CreateAsync(ProductsRequest request, IFormFile? image, CancellationToken cancellationToken = default)
 	{
-		var newProduct = new Product
+		var product = new Product
 		{
-			ProductName = product.ProductName,
-			AliasName = product.AliasName,
-			CategoryId = product.CategoryId ?? 0,
-			Description = product.Description ?? product.UnitDescription,
-			Price = product.Price,
-			CreatedAt = DateOnly.FromDateTime(product.ManufactureDate),
-			Discount = product.Discount ?? 0,
-			Views = product.Views ?? 0
+			ProductName = request.TenHh,
+			AliasName = request.TenAlias,
+			CategoryId = request.MaLoai ?? 0,
+			Description = request.MoTa ?? request.MoTaDonVi,
+			Price = request.DonGia,
+			CreatedAt = DateOnly.FromDateTime(request.NgaySx),
+			Discount = request.GiamGia ?? 0,
+			Views = request.LuotMua ?? 0
 		};
 
 		if (image != null && image.Length > 0)
 		{
 			try
 			{
-				newProduct.Image = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_PRODUCT);
+				product.Image = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_PRODUCT);
 			}
 			catch (Exception ex)
 			{
@@ -82,51 +77,54 @@ public class AdminProductService : IAdminProductService
 			}
 		}
 
-		await _productRepository.CreateAsync(newProduct, cancellationToken);
+		await _db.Products.AddAsync(product, cancellationToken);
+		await _db.SaveChangesAsync(cancellationToken);
 		return ServiceResult.Ok("Create product successfully");
 	}
 
-	public async Task<ServiceResult> UpdateAsync(int id, ProductRequestDto product, CancellationToken cancellationToken = default)
+	public async Task<ServiceResult> UpdateAsync(int id, ProductsRequest request, CancellationToken cancellationToken = default)
 	{
-		var existingProduct = await _productRepository.GetByIdAsync(id, cancellationToken);
+		var existingProduct = await _db.Products.FirstOrDefaultAsync(p => p.ProductId == id, cancellationToken);
 		if (existingProduct == null)
 		{
 			return ServiceResult.Fail("Product not found");
 		}
 
-		existingProduct.ProductName = product.ProductName;
-		existingProduct.AliasName = product.AliasName;
-		existingProduct.CategoryId = product.CategoryId ?? 0;
-		existingProduct.Description = product.Description ?? product.UnitDescription;
-		existingProduct.Price = product.Price;
-		existingProduct.CreatedAt = DateOnly.FromDateTime(product.ManufactureDate);
-		existingProduct.Discount = product.Discount ?? 0;
-		existingProduct.Views = product.Views ?? 0;
+		existingProduct.ProductName = request.TenHh;
+		existingProduct.AliasName = request.TenAlias;
+		existingProduct.CategoryId = request.MaLoai ?? 0;
+		existingProduct.Description = request.MoTa ?? request.MoTaDonVi;
+		existingProduct.Price = request.DonGia;
+		existingProduct.CreatedAt = DateOnly.FromDateTime(request.NgaySx);
+		existingProduct.Discount = request.GiamGia ?? 0;
+		existingProduct.Views = request.LuotMua ?? 0;
 
-		if (product.ImageFile != null && product.ImageFile.Length > 0)
+		if (request.Hinh != null && request.Hinh.Length > 0)
 		{
-			existingProduct.Image = await _cloudinaryService.UploadImageAsync(product.ImageFile, Constants.FOLDER_CLOUDINARY_PRODUCT);
+			existingProduct.Image = await _cloudinaryService.UploadImageAsync(request.Hinh, Constants.FOLDER_CLOUDINARY_PRODUCT);
 		}
 
-		await _productRepository.UpdateAsync(existingProduct, cancellationToken);
+		_db.Products.Update(existingProduct);
+		await _db.SaveChangesAsync(cancellationToken);
 		return ServiceResult.Ok("Update product successfully");
 	}
 
 	public async Task<ServiceResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
 	{
-		var detailExists = await _detailInvoiceRepository.ExistsByProductIdAsync(id, cancellationToken);
+		var detailExists = await _db.DetailInvoices.AnyAsync(c => c.ProductId == id, cancellationToken);
 		if (detailExists)
 		{
 			return ServiceResult.Fail("Cannot delete this product because it is used in invoices");
 		}
 
-		var product = await _productRepository.GetByIdAsync(id, cancellationToken);
+		var product = await _db.Products.FindAsync(new object[] { id }, cancellationToken);
 		if (product == null)
 		{
 			return ServiceResult.Fail("Product not found");
 		}
 
-		await _productRepository.DeleteAsync(id, cancellationToken);
+		_db.Products.Remove(product);
+		await _db.SaveChangesAsync(cancellationToken);
 		return ServiceResult.Ok("Delete product successfully");
 	}
 }

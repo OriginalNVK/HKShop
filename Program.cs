@@ -66,9 +66,10 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
-builder.Services.AddAutoMapper(
-    _ => { },
-    typeof(HKShop.Helpers.AutoMapper).Assembly);
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<CustomMapper>();
+});
 
  builder.Services.AddSingleton(x => new PaypalClient(
                 builder.Configuration["PaypalOption:AppID"] ?? throw new InvalidOperationException("PaypalOption:AppID is not configured"),

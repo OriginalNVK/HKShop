@@ -13,14 +13,14 @@ public class ServiceResult
 
 public class AdminProductsPageResult
 {
-    public List<ProductResponseDto> Products { get; set; } = new();
-    public List<CategoryDto> Categories { get; set; } = new();
+    public List<HangHoaResponse> Products { get; set; } = new();
+    public List<CategoryResponse> Categories { get; set; } = new();
     public int TotalPages { get; set; }
 }
 
 public class AdminClientsPageResult
 {
-    public List<CustomerResponseDto> Clients { get; set; } = new();
+    public List<ClientResponse> Clients { get; set; } = new();
     public List<int> Roles { get; set; } = new();
     public int TotalCount { get; set; }
     public int TotalPages { get; set; }

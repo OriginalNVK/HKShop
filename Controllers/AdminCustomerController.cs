@@ -26,7 +26,7 @@ namespace HKShop.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateUser(CustomerRequestDto client, IFormFile? image)
+        public async Task<IActionResult> CreateUser(ClientRequest client, IFormFile? image)
         {
             if (!ModelState.IsValid)
             {
@@ -69,11 +69,12 @@ namespace HKShop.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-                public async Task<IActionResult> Edit(CustomerRequestDto client, IFormFile? Hinh)
+        public async Task<IActionResult> Edit([Bind("MaKH, HoTen, GioiTinh, NgaySinh, DiaChi, DienThoai, Email")] ClientRequest Client,
+            IFormFile? Hinh)
         {
             if (ModelState.IsValid)
             {
-				var result = await _customerService.UpdateAsync(client, Hinh);
+                var result = await _customerService.UpdateAsync(Client, Hinh);
                 TempData[ToastMessage] = result.Message;
                 TempData[ToastType] = result.Success ? ToastTypeSuccess : ToastTypeError;
 
@@ -86,7 +87,7 @@ namespace HKShop.Controllers
             }
             TempData[ToastMessage] = "Failed to update user information";
             TempData[ToastType] = ToastTypeError;
-			return Redirect("/admin/clients/update/" + client.CustomerId);
+            return Redirect("/admin/clients/update/" + Client.MaKH);
         }
 
         public async Task<IActionResult> Delete(string id)

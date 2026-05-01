@@ -1,52 +1,42 @@
 using HKShop.DTOs;
 using HKShop.Helpers;
 using HKShop.Models;
-using HKShop.Repositories.Interfaces;
 using HKShop.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace HKShop.Services;
 
 public class CartService : ICartService
 {
-	private readonly ICartRepository _cart;
-	private readonly IProductRepository _product;
-	private readonly ICustomerRepository _customer;
-	private readonly IInvoiceRepository _invoiceRepository;
-	private readonly IDetailInvoiceRepository _detailInvoiceRepository;
+	private readonly DBContext _db;
 	private readonly PaypalClient _paypalClient;
 
-	public CartService(
-		ICartRepository cart,
-		IProductRepository product,
-		ICustomerRepository customer,
-		IInvoiceRepository invoiceRepository,
-		IDetailInvoiceRepository detailInvoiceRepository,
-		PaypalClient paypalClient)
+	public CartService(DBContext db, PaypalClient paypalClient)
 	{
-		_cart = cart;
-		_product = product;
-		_customer = customer;
-		_invoiceRepository = invoiceRepository;
-		_detailInvoiceRepository = detailInvoiceRepository;
+		_db = db;
 		_paypalClient = paypalClient;
 	}
 
-	public async Task<List<CartItemDto>?> GetCartAsync(string? customerId, CancellationToken cancellationToken = default)
+	public async Task<List<GioHangItem>?> GetCartAsync(string? customerId, CancellationToken cancellationToken = default)
 	{
 		if (string.IsNullOrWhiteSpace(customerId))
 		{
 			return null;
 		}
 
-		var items = await _cart.GetByCustomerIdAsync(customerId, cancellationToken);
-		return items.Select(c => new CartItemDto
-		{
-			ProductId = c.ProductId,
-			ProductName = c.ProductIdNavigation.ProductName,
-			Price = c.Amount,
-			Quantity = c.Quantity,
-			ImageUrl = c.ProductIdNavigation.Image ?? string.Empty
-		}).ToList();
+		return await _db.Carts
+			.AsNoTracking()
+			.Include(c => c.ProductIdNavigation)
+			.Where(c => c.CustomerId == customerId)
+			.Select(c => new GioHangItem
+			{
+				MaHH = c.ProductId,
+				TenHH = c.ProductIdNavigation.ProductName,
+				DonGia = c.Amount,
+				SoLuong = c.Quantity,
+				Hinh = c.ProductIdNavigation.Image ?? string.Empty
+			})
+			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<ServiceResult> AddToCartAsync(string? customerId, int productId, int quantity, CancellationToken cancellationToken = default)
@@ -56,21 +46,35 @@ public class CartService : ICartService
 			return ServiceResult.Fail("Unauthorized");
 		}
 
-		var product = await _product.GetByIdAsync(productId, cancellationToken);
-		if (product == null)
-		{
-			return ServiceResult.Fail("Product not found");
-		}
-
-		var item = await _cart.AddOrUpdateItemAsync(customerId, productId, quantity, cancellationToken);
+		var item = await _db.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
 		if (item == null)
 		{
-			return ServiceResult.Fail("Cannot add product to cart");
+			var product = await _db.Products.SingleOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
+			if (product == null)
+			{
+				return ServiceResult.Fail("Product not found");
+			}
+
+			item = new Cart
+			{
+				CustomerId = customerId,
+				ProductId = product.ProductId,
+				Amount = product.Price ?? 0,
+				Quantity = quantity,
+				AddedAt = DateTime.Now
+			};
+			await _db.Carts.AddAsync(item, cancellationToken);
+		}
+		else
+		{
+			item.Quantity += quantity;
+			_db.Carts.Update(item);
 		}
 
+		await _db.SaveChangesAsync(cancellationToken);
 		return ServiceResult.Ok();
 	}
-		
+
 	public async Task RemoveCartItemAsync(string? customerId, int productId, CancellationToken cancellationToken = default)
 	{
 		if (string.IsNullOrWhiteSpace(customerId))
@@ -78,51 +82,61 @@ public class CartService : ICartService
 			return;
 		}
 
-		await _cart.RemoveItemAsync(customerId, productId, cancellationToken);
+		var item = await _db.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
+		if (item != null)
+		{
+			_db.Carts.Remove(item);
+			await _db.SaveChangesAsync(cancellationToken);
+		}
 	}
 
-	public async Task<List<CartItemDto>> GetCheckoutItemsAsync(string customerId, CancellationToken cancellationToken = default)
+	public async Task<List<GioHangItem>> GetCheckoutItemsAsync(string customerId, CancellationToken cancellationToken = default)
 	{
-		var carts = await _cart.GetByCustomerIdAsync(customerId, cancellationToken);
-		return carts.Select(c => new CartItemDto
+		return await _db.Carts
+			.AsNoTracking()
+			.Include(c => c.ProductIdNavigation)
+			.Where(c => c.CustomerId == customerId)
+			.Select(c => new GioHangItem
 			{
-				ProductId = c.ProductId,
-				ProductName = c.ProductIdNavigation.ProductName,
-				Price = c.Amount,
-				Quantity = c.Quantity,
-				ImageUrl = c.ProductIdNavigation.Image ?? string.Empty
+				MaHH = c.ProductId,
+				TenHH = c.ProductIdNavigation.ProductName,
+				DonGia = c.Amount,
+				SoLuong = c.Quantity,
+				Hinh = c.ProductIdNavigation.Image ?? string.Empty
 			})
-			.ToList();
+			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<ServiceResult> CheckoutCodAsync(string customerId, CheckoutRequestDto model, CancellationToken cancellationToken = default)
+	public async Task<ServiceResult> CheckoutCodAsync(string customerId, CheckoutVM model, CancellationToken cancellationToken = default)
 	{
-		var carts = await _cart.GetByCustomerIdAsync(customerId, cancellationToken);
+		var carts = await _db.Carts.Where(c => c.CustomerId == customerId).ToListAsync(cancellationToken);
 		if (carts.Count == 0)
 		{
 			return ServiceResult.Fail("Cart is empty");
 		}
 
-		var customer = model.UseCustomerProfile
-			? await _customer.GetByUsernameAsync(customerId, cancellationToken)
+		var customer = model.GiongKhachHang
+			? await _db.Customers.SingleOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken)
 			: null;
 
 		var invoice = new Invoice
 		{
 			CustomerId = customerId,
-			CustomerName = model.FullName ?? customer?.FullName,
-			Address = model.Address ?? customer?.Address ?? string.Empty,
-			PhoneNumber = model.PhoneNumber ?? customer?.PhoneNumber ?? string.Empty,
+			CustomerName = model.HoTen ?? customer?.FullName,
+			Address = model.DiaChi ?? customer?.Address ?? string.Empty,
+			PhoneNumber = model.DienThoai ?? customer?.PhoneNumber ?? string.Empty,
 			OrderDate = DateTime.Now,
 			PaymentMethod = "COD",
 			ShippingMethod = "Grab",
 			StatusCode = 0,
-			Notes = model.Notes
+			Notes = model.GhiChu
 		};
 
+		await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 		try
 		{
-			await _invoiceRepository.CreateAsync(invoice, cancellationToken);
+			await _db.Invoices.AddAsync(invoice, cancellationToken);
+			await _db.SaveChangesAsync(cancellationToken);
 
 			var details = carts.Select(item => new DetailInvoice
 			{
@@ -133,16 +147,15 @@ public class CartService : ICartService
 				Discount = 0
 			}).ToList();
 
-			foreach (var detail in details)
-			{
-				await _detailInvoiceRepository.CreateAsync(detail, cancellationToken);
-			}
-
-			await _cart.ClearCartAsync(customerId, cancellationToken);
+			await _db.DetailInvoices.AddRangeAsync(details, cancellationToken);
+			_db.Carts.RemoveRange(carts);
+			await _db.SaveChangesAsync(cancellationToken);
+			await transaction.CommitAsync(cancellationToken);
 			return ServiceResult.Ok("Checkout success");
 		}
 		catch
 		{
+			await transaction.RollbackAsync(cancellationToken);
 			return ServiceResult.Fail("Checkout failed");
 		}
 	}
@@ -150,14 +163,14 @@ public class CartService : ICartService
 	public async Task<CreateOrderResponse> CreatePaypalOrderAsync(string customerId, CancellationToken cancellationToken = default)
 	{
 		var cartItems = await GetCheckoutItemsAsync(customerId, cancellationToken);
-		var total = cartItems.Sum(p => p.LineTotal).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+		var total = cartItems.Sum(p => p.ThanhTien).ToString();
 		var reference = "INV" + DateTime.Now.Ticks;
 		return await _paypalClient.CreateOrder(total, "USD", reference);
 	}
 
 	public async Task<PaypalCaptureResult> CapturePaypalOrderAsync(string customerId, string orderId, CancellationToken cancellationToken = default)
 	{
-		var carts = await _cart.GetByCustomerIdAsync(customerId, cancellationToken);
+		var carts = await _db.Carts.Where(c => c.CustomerId == customerId).ToListAsync(cancellationToken);
 		if (carts.Count == 0)
 		{
 			return new PaypalCaptureResult { Success = false, Message = "Cart is empty" };
@@ -166,7 +179,7 @@ public class CartService : ICartService
 		try
 		{
 			var response = await _paypalClient.CaptureOrder(orderId);
-			var customer = await _customer.GetByUsernameAsync(customerId, cancellationToken);
+			var customer = await _db.Customers.SingleOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
 
 			var invoice = new Invoice
 			{
@@ -181,9 +194,11 @@ public class CartService : ICartService
 				Notes = "Paid with PayPal"
 			};
 
+			await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
 			try
 			{
-				await _invoiceRepository.CreateAsync(invoice, cancellationToken);
+				await _db.Invoices.AddAsync(invoice, cancellationToken);
+				await _db.SaveChangesAsync(cancellationToken);
 
 				var details = carts.Select(item => new DetailInvoice
 				{
@@ -194,17 +209,16 @@ public class CartService : ICartService
 					Discount = 0
 				}).ToList();
 
-				foreach (var detail in details)
-				{
-					await _detailInvoiceRepository.CreateAsync(detail, cancellationToken);
-				}
-
-				await _cart.ClearCartAsync(customerId, cancellationToken);
+				await _db.DetailInvoices.AddRangeAsync(details, cancellationToken);
+				_db.Carts.RemoveRange(carts);
+				await _db.SaveChangesAsync(cancellationToken);
+				await tx.CommitAsync(cancellationToken);
 
 				return new PaypalCaptureResult { Success = true, Data = response, Message = "Payment success" };
 			}
 			catch (Exception ex)
 			{
+				await tx.RollbackAsync(cancellationToken);
 				return new PaypalCaptureResult { Success = false, Message = "Failed to save invoice: " + ex.Message };
 			}
 		}
