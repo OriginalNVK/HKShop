@@ -15,7 +15,7 @@
 <div class="row g-4">
 @foreach (var item in Model)
 {
-	var categoryName = (item.Category as HKShop.Models.Category)?.CategoryName ?? string.Empty;
+	var categoryName = (item.Category as HKShop.Domain.Category)?.Name ?? string.Empty;
 	<div class="col-md-3 col-xs-4 h-80">
 		@await Html.PartialAsync("_ProductCard", new ProductCardViewModel
 		{

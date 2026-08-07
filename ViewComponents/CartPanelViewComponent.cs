@@ -15,8 +15,8 @@ namespace HKShop.ViewComponents
         }
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var maKH = HttpContext.User.Identity.IsAuthenticated ? HttpContext.User.FindFirst(Constants.CLAIM_CUSTOMERID)?.Value : null;
-            if (maKH == null)
+            var maKH = HttpContext.User.Identity?.IsAuthenticated == true ? HttpContext.User.FindFirst(Constants.CLAIM_CUSTOMERID)?.Value : null;
+            if (!int.TryParse(maKH, out var customerId))
             {
                 return View(new GioHangModel
                 {
@@ -26,14 +26,14 @@ namespace HKShop.ViewComponents
                 });
             }
 
-            var carts = await _cartRepository.GetByCustomerIdAsync(maKH);
+            var carts = await _cartRepository.GetByCustomerIdAsync(customerId);
             var gioHangItems = carts.Select(c => new GioHangItem
             {
                 MaHH = c.ProductId,
-                TenHH = c.ProductIdNavigation.ProductName,
-                DonGia = c.Amount,
+                TenHH = c.Product.Name,
+                DonGia = c.Product.UnitPrice ?? 0,
                 SoLuong = c.Quantity,
-                Hinh = c.ProductIdNavigation.Image
+                Hinh = c.Product.Image ?? string.Empty
             }).ToList();
             return View(new GioHangModel()
             {

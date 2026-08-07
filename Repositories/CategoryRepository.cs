@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,9 +6,9 @@ namespace HKShop.Repositories;
 
 public class CategoryRepository : ICategoryRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public CategoryRepository(DBContext context)
+	public CategoryRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
@@ -17,7 +17,7 @@ public class CategoryRepository : ICategoryRepository
 	{
 		return await _context.Categories
 			.AsNoTracking()
-			.OrderBy(c => c.CategoryName)
+			.OrderBy(c => c.Name)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -25,7 +25,7 @@ public class CategoryRepository : ICategoryRepository
 	{
 		return await _context.Categories
 			.Include(c => c.Products)
-			.FirstOrDefaultAsync(c => c.CategoryId == categoryId, cancellationToken);
+			.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
 	}
 
 	public async Task<Category> CreateAsync(Category category, CancellationToken cancellationToken = default)
@@ -37,14 +37,13 @@ public class CategoryRepository : ICategoryRepository
 
 	public async Task<bool> UpdateAsync(Category category, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == category.CategoryId, cancellationToken);
+		var existing = await _context.Categories.FirstOrDefaultAsync(c => c.Id == category.Id, cancellationToken);
 		if (existing == null)
 		{
 			return false;
 		}
 
-		existing.CategoryName = category.CategoryName;
-		existing.CategoryAlias = category.CategoryAlias;
+		existing.Name = category.Name;
 		existing.Description = category.Description;
 		existing.Image = category.Image;
 
@@ -54,7 +53,7 @@ public class CategoryRepository : ICategoryRepository
 
 	public async Task<bool> DeleteAsync(int categoryId, CancellationToken cancellationToken = default)
 	{
-		var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == categoryId, cancellationToken);
+		var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
 		if (category == null)
 		{
 			return false;

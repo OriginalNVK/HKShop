@@ -69,7 +69,7 @@ namespace HKShop.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit([Bind("MaKH, HoTen, GioiTinh, NgaySinh, DiaChi, DienThoai, Email")] ClientRequest Client,
+        public async Task<IActionResult> Edit([Bind("CustomerId, FullName, Gender, BirthDate, Address, PhoneNumber, Email")] ClientRequest Client,
             IFormFile? Hinh)
         {
             if (ModelState.IsValid)
@@ -87,7 +87,7 @@ namespace HKShop.Controllers
             }
             TempData[ToastMessage] = "Failed to update user information";
             TempData[ToastType] = ToastTypeError;
-            return Redirect("/admin/clients/update/" + Client.MaKH);
+            return Redirect("/admin/clients/update/" + Client.CustomerId);
         }
 
         public async Task<IActionResult> Delete(string id)

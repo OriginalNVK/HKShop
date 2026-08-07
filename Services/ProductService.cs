@@ -1,5 +1,5 @@
 using HKShop.DTOs;
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +7,9 @@ namespace HKShop.Services;
 
 public class ProductService : IProductService
 {
-	private readonly DBContext _db;
+	private readonly HKShopDbContext _db;
 
-	public ProductService(DBContext db)
+	public ProductService(HKShopDbContext db)
 	{
 		_db = db;
 	}
@@ -24,18 +24,18 @@ public class ProductService : IProductService
 		}
 		else if (!string.IsNullOrWhiteSpace(keyword))
 		{
-			products = products.Where(p => p.ProductName.Contains(keyword));
+			products = products.Where(p => p.Name.Contains(keyword));
 		}
 
 		return await products
 			.Select(p => new HangHoaResponse
 			{
-				MaHh = p.ProductId,
-				TenHH = p.ProductName,
-				DonGia = p.Price ?? 0,
+				MaHh = p.Id,
+				TenHH = p.Name,
+				DonGia = p.UnitPrice ?? 0,
 				Hinh = p.Image ?? string.Empty,
 				MoTaNgan = p.Description ?? string.Empty,
-				TenLoai = p.Category.CategoryName,
+				TenLoai = p.Category.Name,
 				GiamGia = p.Discount
 			})
 			.ToListAsync(cancellationToken);
@@ -46,7 +46,7 @@ public class ProductService : IProductService
 		var product = await _db.Products
 			.AsNoTracking()
 			.Include(p => p.Category)
-			.SingleOrDefaultAsync(p => p.ProductId == id, cancellationToken);
+			.SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
 
 		if (product == null)
 		{
@@ -55,14 +55,14 @@ public class ProductService : IProductService
 
 		return new ChiTietHangHoaResponse
 		{
-			MaHH = product.ProductId,
-			TenHH = product.ProductName,
-			DonGia = product.Price ?? 0,
+			MaHH = product.Id,
+			TenHH = product.Name,
+			DonGia = product.UnitPrice ?? 0,
 			ChiTiet = product.Description ?? string.Empty,
 			DiemDanhGia = 5,
 			Hinh = product.Image ?? string.Empty,
 			MoTaNgan = product.Description ?? string.Empty,
-			TenLoai = product.Category.CategoryName,
+			TenLoai = product.Category.Name,
 			SoLuongTon = 10
 		};
 	}

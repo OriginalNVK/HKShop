@@ -1,7 +1,7 @@
 ﻿@model HKShop.DTOs.ProductResponseDto
 @{
 	Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-	ViewBag.Title = "Chi tiết đơn hàng";
+	ViewBag.Title = "Order Details";
 }
 <!-- SECTION -->
 <div class="section">
@@ -58,7 +58,7 @@
 				<!-- Thông tin bổ sung từ phiên bản đầu -->
 				<div class="product-meta">
 					<p><strong>Mã sản phẩm:</strong> @Model.ProductId</p>
-					<p><strong>Loại hàng hóa:</strong> @((Model.Category as HKShop.Models.Category)?.CategoryName)</p>
+					<p><strong>Loại hàng hóa:</strong> @((Model.Category as HKShop.Domain.Category)?.Name)</p>
 					<p><strong>Ngày sản xuất:</strong> @Model.ManufactureDate.ToString("dd/MM/yyyy")</p>
 					<p><strong>Lượt xem:</strong> @Model.Views</p>
 					<p><strong>Mô tả đơn vị:</strong> @Model.UnitDescription</p>
@@ -110,7 +110,7 @@
 									</tr>
 									<tr>
 										<td>Loại sản phẩm</td>
-										<td>@((Model.Category as HKShop.Models.Category)?.CategoryName)</td>
+										<td>@((Model.Category as HKShop.Domain.Category)?.Name)</td>
 									</tr>
 								</table>
 							</div>

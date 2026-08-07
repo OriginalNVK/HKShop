@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using HKShop.Models;
 using HKShop.Services.Interfaces;
 
 namespace HKShop.Controllers;

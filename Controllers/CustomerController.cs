@@ -6,24 +6,24 @@ using HKShop.Services.Interfaces;
 
 namespace HKShop.Controllers
 {
-    public class KhachHangController : Controller
+    public class CustomerController : Controller
     {
         private readonly ICustomerService _customerService;
 
-        public KhachHangController(ICustomerService customerService)
+        public CustomerController(ICustomerService customerService)
         {
             _customerService = customerService;
         }
 
-        #region Đăng ký 
+        #region Register
         [HttpGet]
-        public IActionResult DangKy()
+        public IActionResult Register()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> DangKy(DangKyRequest model, IFormFile? Hinh)
+        public async Task<IActionResult> Register(DangKyRequest model, IFormFile? Hinh)
         {
             if (ModelState.IsValid)
             {
@@ -39,16 +39,16 @@ namespace HKShop.Controllers
         }
         #endregion
 
-        #region Đăng nhập
+        #region Login
         [HttpGet]
-        public IActionResult DangNhap(string? returnUrl)
+        public IActionResult Login(string? returnUrl)
         {
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> DangNhap(DangNhapRequest model, string? returnUrl)
+        public async Task<IActionResult> Login(DangNhapRequest model, string? returnUrl)
         {
             ViewBag.ReturnUrl = returnUrl;
             if (ModelState.IsValid)

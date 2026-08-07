@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 
 namespace HKShop.Services.Interfaces;
 

@@ -72,7 +72,7 @@
 								<img src="@item.ImageUrl" alt="@item.ProductName" class="product-image">
 							</td>
 							<td class="text-center align-middle">@item.ProductName</td>
-							<td class="text-center align-middle">@((item.Category as HKShop.Models.Category)?.CategoryName)</td>
+							<td class="text-center align-middle">@((item.Category as HKShop.Domain.Category)?.Name ?? string.Empty)</td>
 							<td class="text-center align-middle">@item.Price</td>
 							<td class="text-center align-middle">@item.Discount</td>
 							<td class="text-center align-middle">

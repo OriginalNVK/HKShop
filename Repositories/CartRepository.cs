@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,74 +6,110 @@ namespace HKShop.Repositories;
 
 public class CartRepository: ICartRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public CartRepository(DBContext context)
+	public CartRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
 
-	public async Task<List<Cart>> GetByCustomerIdAsync(string customerId, CancellationToken cancellationToken = default)
+	public async Task<List<DetailCart>> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
 	{
-		return await _context.Carts
+		return await _context.DetailCarts
 			.AsNoTracking()
-			.Include(c => c.ProductIdNavigation)
-			.Where(c => c.CustomerId == customerId)
-			.OrderByDescending(c => c.AddedAt)
+			.Include(d => d.Cart)
+			.Include(d => d.Product)
+			.Where(d => d.Cart.CustomerId == customerId)
+			.OrderByDescending(d => d.AddedDate)
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<Cart?> GetItemAsync(string customerId, int productId, CancellationToken cancellationToken = default)
+	public async Task<DetailCart?> GetItemAsync(int customerId, int productId, CancellationToken cancellationToken = default)
 	{
-		return await _context.Carts
-			.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
+		return await _context.DetailCarts
+			.Include(d => d.Cart)
+			.Include(d => d.Product)
+			.FirstOrDefaultAsync(d => d.Cart.CustomerId == customerId && d.ProductId == productId, cancellationToken);
 	}
 
-	public async Task<Cart?> AddOrUpdateItemAsync(string customerId, int productId, int quantity, CancellationToken cancellationToken = default)
+	private async Task<Cart> GetOrCreateCartAsync(int customerId, CancellationToken cancellationToken)
+	{
+		var cart = await _context.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
+		if (cart != null)
+		{
+			return cart;
+		}
+
+		cart = new Cart
+		{
+			CustomerId = customerId,
+			TotalPrice = 0m
+		};
+		await _context.Carts.AddAsync(cart, cancellationToken);
+		await _context.SaveChangesAsync(cancellationToken);
+		return cart;
+	}
+
+	public async Task<DetailCart?> AddOrUpdateItemAsync(int customerId, int productId, int quantity, CancellationToken cancellationToken = default)
 	{
 		if (quantity <= 0)
 		{
 			return null;
 		}
 
-		var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
+		var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
 		if (product == null)
 		{
 			return null;
 		}
 
-		var item = await _context.Carts
-			.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
+		var cart = await GetOrCreateCartAsync(customerId, cancellationToken);
+		var item = await _context.DetailCarts.FirstOrDefaultAsync(c => c.CartId == cart.Id && c.ProductId == productId, cancellationToken);
 
-		var unitPrice = (product.Price ?? 0m) * (1m - product.Discount / 100m);
+		var unitPrice = product.UnitPrice ?? 0m;
 		if (item == null)
 		{
-			item = new Cart
+			var detail = new DetailCart
 			{
-				CustomerId = customerId,
+				CartId = cart.Id,
 				ProductId = productId,
 				Quantity = quantity,
-				Amount = unitPrice,
-				AddedAt = DateTime.UtcNow
+				AddedDate = DateTime.UtcNow,
+				SubPrice = unitPrice * quantity
 			};
-
-			await _context.Carts.AddAsync(item, cancellationToken);
+			await _context.DetailCarts.AddAsync(detail, cancellationToken);
+			await RecalculateTotalAsync(cart.Id, cancellationToken);
+			await _context.SaveChangesAsync(cancellationToken);
+			return detail;
 		}
 		else
 		{
 			item.Quantity += quantity;
-			item.Amount = unitPrice;
-			item.AddedAt = DateTime.UtcNow;
+			item.SubPrice = unitPrice * item.Quantity;
+			item.AddedDate = DateTime.UtcNow;
 		}
 
+		await RecalculateTotalAsync(cart.Id, cancellationToken);
 		await _context.SaveChangesAsync(cancellationToken);
 		return item;
 	}
 
-	public async Task<bool> UpdateQuantityAsync(string customerId, int productId, int quantity, CancellationToken cancellationToken = default)
+	private async Task RecalculateTotalAsync(int cartId, CancellationToken cancellationToken)
 	{
-		var item = await _context.Carts
-			.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
+		var total = await _context.DetailCarts
+			.Where(d => d.CartId == cartId)
+			.SumAsync(d => d.SubPrice, cancellationToken);
+
+		var cart = await _context.Carts.FirstOrDefaultAsync(c => c.Id == cartId, cancellationToken);
+		if (cart != null)
+		{
+			cart.TotalPrice = total;
+		}
+	}
+
+	public async Task<bool> UpdateQuantityAsync(int customerId, int productId, int quantity, CancellationToken cancellationToken = default)
+	{
+		var item = await GetItemAsync(customerId, productId, cancellationToken);
 
 		if (item == null)
 		{
@@ -82,36 +118,44 @@ public class CartRepository: ICartRepository
 
 		if (quantity <= 0)
 		{
-			_context.Carts.Remove(item);
+			_context.DetailCarts.Remove(item);
 		}
 		else
 		{
 			item.Quantity = quantity;
+			item.SubPrice = (item.Product.UnitPrice ?? 0m) * quantity;
 		}
 
+		await RecalculateTotalAsync(item.CartId, cancellationToken);
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
 	}
 
-	public async Task<bool> RemoveItemAsync(string customerId, int productId, CancellationToken cancellationToken = default)
+	public async Task<bool> RemoveItemAsync(int customerId, int productId, CancellationToken cancellationToken = default)
 	{
-		var item = await _context.Carts
-			.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
+		var item = await GetItemAsync(customerId, productId, cancellationToken);
 
 		if (item == null)
 		{
 			return false;
 		}
 
-		_context.Carts.Remove(item);
+		_context.DetailCarts.Remove(item);
+		await RecalculateTotalAsync(item.CartId, cancellationToken);
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
 	}
 
-	public async Task<int> ClearCartAsync(string customerId, CancellationToken cancellationToken = default)
+	public async Task<int> ClearCartAsync(int customerId, CancellationToken cancellationToken = default)
 	{
-		var items = await _context.Carts
-			.Where(c => c.CustomerId == customerId)
+		var cart = await _context.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
+		if (cart == null)
+		{
+			return 0;
+		}
+
+		var items = await _context.DetailCarts
+			.Where(c => c.CartId == cart.Id)
 			.ToListAsync(cancellationToken);
 
 		if (items.Count == 0)
@@ -119,16 +163,9 @@ public class CartRepository: ICartRepository
 			return 0;
 		}
 
-		_context.Carts.RemoveRange(items);
+		_context.DetailCarts.RemoveRange(items);
+		cart.TotalPrice = 0m;
 		await _context.SaveChangesAsync(cancellationToken);
 		return items.Count;
-	}
-
-	public async Task<decimal> GetCartTotalAsync(string customerId, CancellationToken cancellationToken = default)
-	{
-		return await _context.Carts
-			.AsNoTracking()
-			.Where(c => c.CustomerId == customerId)
-			.SumAsync(c => c.Amount * c.Quantity, cancellationToken);
 	}
 }

@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 
 namespace HKShop.Repositories.Interfaces;
 
@@ -28,7 +28,7 @@ public interface IInvoiceRepository
 	/// <param name="customerId"></param>
 	/// <param name="cancellationToken"></param>
 	/// <returns>List of invoices</returns>
-	Task<List<Invoice>> GetByCustomerIdAsync(string customerId, CancellationToken cancellationToken = default);
+    Task<List<Invoice>> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default);
 	
     /// <summary>
     /// Create a new invoice in the database. 
@@ -58,7 +58,7 @@ public interface IInvoiceRepository
 	/// <param name="adminId"></param>
 	/// <param name="cancellationToken"></param>
 	/// <returns>True if the assignment was successful, otherwise false</returns>
-	Task<bool> AssignAdminAsync(int invoiceId, string adminId, CancellationToken cancellationToken = default);
+    Task<bool> AssignAdminAsync(int invoiceId, int employeeId, CancellationToken cancellationToken = default);
 	
     /// <summary>
     /// Delete an invoice from the database. 

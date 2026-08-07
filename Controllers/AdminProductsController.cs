@@ -42,7 +42,7 @@ namespace HKShop.Controllers
         public async Task<IActionResult> Create()
         {
             var categories = await _adminProductService.GetCategoriesAsync();
-            ViewData["Maloai"] = new SelectList(categories, "CategoryId", "CategoryName");
+            ViewData["Maloai"] = new SelectList(categories, "Id", "Name");
             return View();
         }
 
@@ -51,7 +51,7 @@ namespace HKShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateProduct([Bind("MaHh,TenHh,TenAlias,MaLoai,MoTaDonVi,DonGia,NgaySx,GiamGia,LuotMua,MoTa")] ProductsRequest hangHoa,
+        public async Task<IActionResult> CreateProduct([Bind("ProductId,ProductName,AliasName,CategoryId,UnitDescription,Price,ManufactureDate,Discount,Views,Description")] ProductsRequest hangHoa,
             IFormFile Hinh)
         {
             if (ModelState.IsValid)
@@ -66,7 +66,7 @@ namespace HKShop.Controllers
             }
 
             var categories = await _adminProductService.GetCategoriesAsync();
-            ViewData["Maloai"] = new SelectList(categories, "CategoryId", "CategoryName", hangHoa.MaLoai);
+            ViewData["Maloai"] = new SelectList(categories, "Id", "Name", hangHoa.CategoryId);
             return View("Create", hangHoa);
         }
 
@@ -86,7 +86,7 @@ namespace HKShop.Controllers
             }
 
             var categories = await _adminProductService.GetCategoriesAsync();
-            ViewData["MaLoai"] = new SelectList(categories, "CategoryId", "CategoryName", product.MaLoai);
+            ViewData["MaLoai"] = new SelectList(categories, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -95,9 +95,9 @@ namespace HKShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MaHh,TenHh,TenAlias,MaLoai,MoTaDonVi,DonGia,Hinh,NgaySx,GiamGia,LuotMua,MoTa")] ProductsRequest product)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,AliasName,CategoryId,UnitDescription,Price,ImageFile,ManufactureDate,Discount,Views,Description")] ProductsRequest product)
         {
-            if (id != product.MaHh)
+            if (id != product.ProductId)
             {
                 return NotFound();
             }

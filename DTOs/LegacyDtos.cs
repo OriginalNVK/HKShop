@@ -30,6 +30,12 @@ public class HangHoaResponse : ProductCardViewModel
 
     public string MoTaNgan { get; set; } = string.Empty;
 
+    public string ShortDescription
+    {
+        get => MoTaNgan;
+        set => MoTaNgan = value;
+    }
+
     public string TenLoai
     {
         get => CategoryName;

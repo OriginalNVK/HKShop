@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HKShop.Models;
+namespace HKShop.Domain;
 
-public partial class User
+public partial class AppUser
 {
     public int Id { get; set; }
 
@@ -15,11 +15,11 @@ public partial class User
 
     public bool IsActive { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
 
     public string? RandomKey { get; set; }
 
     public virtual Customer? Customer { get; set; }
 
-    public virtual Admin? Admin { get; set; }
+    public virtual Employee? Employee { get; set; }
 }

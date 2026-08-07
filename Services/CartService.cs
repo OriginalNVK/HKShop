@@ -1,6 +1,6 @@
 using HKShop.DTOs;
 using HKShop.Helpers;
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,128 +8,164 @@ namespace HKShop.Services;
 
 public class CartService : ICartService
 {
-	private readonly DBContext _db;
+	private readonly HKShopDbContext _db;
 	private readonly PaypalClient _paypalClient;
 
-	public CartService(DBContext db, PaypalClient paypalClient)
+	public CartService(HKShopDbContext db, PaypalClient paypalClient)
 	{
 		_db = db;
 		_paypalClient = paypalClient;
 	}
 
+	private static bool TryParseCustomerId(string? customerId, out int parsedCustomerId)
+	{
+		return int.TryParse(customerId, out parsedCustomerId);
+	}
+
 	public async Task<List<GioHangItem>?> GetCartAsync(string? customerId, CancellationToken cancellationToken = default)
 	{
-		if (string.IsNullOrWhiteSpace(customerId))
+		if (!TryParseCustomerId(customerId, out var customerInt))
 		{
 			return null;
 		}
 
-		return await _db.Carts
+		return await _db.DetailCarts
 			.AsNoTracking()
-			.Include(c => c.ProductIdNavigation)
-			.Where(c => c.CustomerId == customerId)
+			.Include(c => c.Cart)
+			.Include(c => c.Product)
+			.Where(c => c.Cart.CustomerId == customerInt)
 			.Select(c => new GioHangItem
 			{
-				MaHH = c.ProductId,
-				TenHH = c.ProductIdNavigation.ProductName,
-				DonGia = c.Amount,
-				SoLuong = c.Quantity,
-				Hinh = c.ProductIdNavigation.Image ?? string.Empty
+				ProductId = c.ProductId,
+				ProductName = c.Product.Name,
+				Price = c.Product.UnitPrice ?? 0,
+				Quantity = c.Quantity,
+				ImageUrl = c.Product.Image ?? string.Empty
 			})
 			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<ServiceResult> AddToCartAsync(string? customerId, int productId, int quantity, CancellationToken cancellationToken = default)
 	{
-		if (string.IsNullOrWhiteSpace(customerId))
+		if (!TryParseCustomerId(customerId, out var customerInt))
 		{
 			return ServiceResult.Fail("Unauthorized");
 		}
 
-		var item = await _db.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
-		if (item == null)
+		var cart = await _db.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerInt, cancellationToken);
+		if (cart == null)
 		{
-			var product = await _db.Products.SingleOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
-			if (product == null)
-			{
-				return ServiceResult.Fail("Product not found");
-			}
+			cart = new Cart { CustomerId = customerInt, TotalPrice = 0m };
+			await _db.Carts.AddAsync(cart, cancellationToken);
+			await _db.SaveChangesAsync(cancellationToken);
+		}
 
-			item = new Cart
+		var product = await _db.Products.SingleOrDefaultAsync(p => p.Id == productId, cancellationToken);
+		if (product == null)
+		{
+			return ServiceResult.Fail("Product not found");
+		}
+
+		var item = await _db.DetailCarts.FirstOrDefaultAsync(c => c.CartId == cart.Id && c.ProductId == productId, cancellationToken);
+		if (item == null)
 			{
-				CustomerId = customerId,
-				ProductId = product.ProductId,
-				Amount = product.Price ?? 0,
+			item = new DetailCart
+			{
+				CartId = cart.Id,
+				ProductId = product.Id,
 				Quantity = quantity,
-				AddedAt = DateTime.Now
+				AddedDate = DateTime.Now,
+				SubPrice = (product.UnitPrice ?? 0) * quantity
 			};
-			await _db.Carts.AddAsync(item, cancellationToken);
+			await _db.DetailCarts.AddAsync(item, cancellationToken);
 		}
 		else
 		{
 			item.Quantity += quantity;
-			_db.Carts.Update(item);
+			item.SubPrice = (product.UnitPrice ?? 0) * item.Quantity;
 		}
 
+		cart.TotalPrice = await _db.DetailCarts.Where(d => d.CartId == cart.Id).SumAsync(d => d.SubPrice, cancellationToken);
 		await _db.SaveChangesAsync(cancellationToken);
 		return ServiceResult.Ok();
 	}
 
 	public async Task RemoveCartItemAsync(string? customerId, int productId, CancellationToken cancellationToken = default)
 	{
-		if (string.IsNullOrWhiteSpace(customerId))
+		if (!TryParseCustomerId(customerId, out var customerInt))
 		{
 			return;
 		}
 
-		var item = await _db.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerId && c.ProductId == productId, cancellationToken);
+		var cart = await _db.Carts.FirstOrDefaultAsync(c => c.CustomerId == customerInt, cancellationToken);
+		if (cart == null)
+		{
+			return;
+		}
+
+		var item = await _db.DetailCarts.FirstOrDefaultAsync(c => c.CartId == cart.Id && c.ProductId == productId, cancellationToken);
 		if (item != null)
 		{
-			_db.Carts.Remove(item);
+			_db.DetailCarts.Remove(item);
+			cart.TotalPrice = await _db.DetailCarts.Where(d => d.CartId == cart.Id).SumAsync(d => d.SubPrice, cancellationToken);
 			await _db.SaveChangesAsync(cancellationToken);
 		}
 	}
 
 	public async Task<List<GioHangItem>> GetCheckoutItemsAsync(string customerId, CancellationToken cancellationToken = default)
 	{
-		return await _db.Carts
+		if (!TryParseCustomerId(customerId, out var customerInt))
+		{
+			return new List<GioHangItem>();
+		}
+
+		return await _db.DetailCarts
 			.AsNoTracking()
-			.Include(c => c.ProductIdNavigation)
-			.Where(c => c.CustomerId == customerId)
+			.Include(c => c.Cart)
+			.Include(c => c.Product)
+			.Where(c => c.Cart.CustomerId == customerInt)
 			.Select(c => new GioHangItem
 			{
-				MaHH = c.ProductId,
-				TenHH = c.ProductIdNavigation.ProductName,
-				DonGia = c.Amount,
-				SoLuong = c.Quantity,
-				Hinh = c.ProductIdNavigation.Image ?? string.Empty
+				ProductId = c.ProductId,
+				ProductName = c.Product.Name,
+				Price = c.Product.UnitPrice ?? 0,
+				Quantity = c.Quantity,
+				ImageUrl = c.Product.Image ?? string.Empty
 			})
 			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<ServiceResult> CheckoutCodAsync(string customerId, CheckoutVM model, CancellationToken cancellationToken = default)
 	{
-		var carts = await _db.Carts.Where(c => c.CustomerId == customerId).ToListAsync(cancellationToken);
+		if (!TryParseCustomerId(customerId, out var customerInt))
+		{
+			return ServiceResult.Fail("Unauthorized");
+		}
+
+		var carts = await _db.DetailCarts.Include(c => c.Cart).Where(c => c.Cart.CustomerId == customerInt).ToListAsync(cancellationToken);
 		if (carts.Count == 0)
 		{
 			return ServiceResult.Fail("Cart is empty");
 		}
 
 		var customer = model.GiongKhachHang
-			? await _db.Customers.SingleOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken)
+			? await _db.Customers.SingleOrDefaultAsync(c => c.Id == customerInt, cancellationToken)
 			: null;
 
 		var invoice = new Invoice
 		{
-			CustomerId = customerId,
-			CustomerName = model.HoTen ?? customer?.FullName,
+			CustomerId = customerInt,
+			ReceiverName = model.HoTen ?? customer?.Fullname,
 			Address = model.DiaChi ?? customer?.Address ?? string.Empty,
-			PhoneNumber = model.DienThoai ?? customer?.PhoneNumber ?? string.Empty,
+			PhoneNumber = model.DienThoai ?? customer?.Phone ?? string.Empty,
 			OrderDate = DateTime.Now,
 			PaymentMethod = "COD",
 			ShippingMethod = "Grab",
-			StatusCode = 0,
-			Notes = model.GhiChu
+			StatusId = 0,
+			Note = model.GhiChu,
+			ShippingFee = 0m,
+			Discount = 0m,
+			TotalPrice = 0m
 		};
 
 		await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
@@ -140,15 +176,14 @@ public class CartService : ICartService
 
 			var details = carts.Select(item => new DetailInvoice
 			{
-				InvoiceId = invoice.InvoiceId,
+				InvoiceId = invoice.Id,
 				Quantity = item.Quantity,
-				Amount = item.Amount,
+				SubPrice = item.SubPrice,
 				ProductId = item.ProductId,
-				Discount = 0
 			}).ToList();
 
 			await _db.DetailInvoices.AddRangeAsync(details, cancellationToken);
-			_db.Carts.RemoveRange(carts);
+			_db.DetailCarts.RemoveRange(carts);
 			await _db.SaveChangesAsync(cancellationToken);
 			await transaction.CommitAsync(cancellationToken);
 			return ServiceResult.Ok("Checkout success");
@@ -170,7 +205,12 @@ public class CartService : ICartService
 
 	public async Task<PaypalCaptureResult> CapturePaypalOrderAsync(string customerId, string orderId, CancellationToken cancellationToken = default)
 	{
-		var carts = await _db.Carts.Where(c => c.CustomerId == customerId).ToListAsync(cancellationToken);
+		if (!TryParseCustomerId(customerId, out var customerInt))
+		{
+			return new PaypalCaptureResult { Success = false, Message = "Unauthorized" };
+		}
+
+		var carts = await _db.DetailCarts.Include(c => c.Cart).Where(c => c.Cart.CustomerId == customerInt).ToListAsync(cancellationToken);
 		if (carts.Count == 0)
 		{
 			return new PaypalCaptureResult { Success = false, Message = "Cart is empty" };
@@ -179,19 +219,22 @@ public class CartService : ICartService
 		try
 		{
 			var response = await _paypalClient.CaptureOrder(orderId);
-			var customer = await _db.Customers.SingleOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
+			var customer = await _db.Customers.SingleOrDefaultAsync(c => c.Id == customerInt, cancellationToken);
 
 			var invoice = new Invoice
 			{
-				CustomerId = customerId,
-				CustomerName = customer?.FullName ?? response.payer.name.given_name,
+				CustomerId = customerInt,
+				ReceiverName = customer?.Fullname ?? response.payer.name.given_name,
 				Address = customer?.Address ?? "N/A",
-				PhoneNumber = customer?.PhoneNumber ?? "N/A",
+				PhoneNumber = customer?.Phone ?? "N/A",
 				OrderDate = DateTime.Now,
 				PaymentMethod = "PayPal",
 				ShippingMethod = "Grab",
-				StatusCode = 1,
-				Notes = "Paid with PayPal"
+				StatusId = 1,
+				Note = "Paid with PayPal",
+				ShippingFee = 0m,
+				Discount = 0m,
+				TotalPrice = 0m
 			};
 
 			await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
@@ -202,15 +245,14 @@ public class CartService : ICartService
 
 				var details = carts.Select(item => new DetailInvoice
 				{
-					InvoiceId = invoice.InvoiceId,
+					InvoiceId = invoice.Id,
 					Quantity = item.Quantity,
-					Amount = item.Amount,
+					SubPrice = item.SubPrice,
 					ProductId = item.ProductId,
-					Discount = 0
 				}).ToList();
 
 				await _db.DetailInvoices.AddRangeAsync(details, cancellationToken);
-				_db.Carts.RemoveRange(carts);
+				_db.DetailCarts.RemoveRange(carts);
 				await _db.SaveChangesAsync(cancellationToken);
 				await tx.CommitAsync(cancellationToken);
 

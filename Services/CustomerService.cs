@@ -1,6 +1,6 @@
 using HKShop.DTOs;
 using HKShop.Helpers;
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +10,11 @@ namespace HKShop.Services;
 
 public class CustomerService : ICustomerService
 {
-	private readonly DBContext _db;
+	private readonly HKShopDbContext _db;
 	private readonly IGenerateToken _generateToken;
 	private readonly ICloudinaryService _cloudinaryService;
 
-	public CustomerService(DBContext db, IGenerateToken generateToken, ICloudinaryService cloudinaryService)
+	public CustomerService(HKShopDbContext db, IGenerateToken generateToken, ICloudinaryService cloudinaryService)
 	{
 		_db = db;
 		_generateToken = generateToken;
@@ -23,15 +23,15 @@ public class CustomerService : ICustomerService
 
 	public async Task<ServiceResult> RegisterAsync(DangKyRequest model, IFormFile? image, CancellationToken cancellationToken = default)
 	{
-		if (await _db.Users.AnyAsync(u => u.Username == model.TenDangNhap, cancellationToken))
+		if (await _db.AppUsers.AnyAsync(u => u.Username == model.TenDangNhap, cancellationToken))
 		{
 			return ServiceResult.Fail("Username already exists");
 		}
 
-		var user = new User
+		var user = new AppUser
 		{
 			Username = model.TenDangNhap,
-			CreatedAt = DateTime.Now,
+			CreatedDate = DateTime.Now,
 			RandomKey = Utils.GenerateRandomKey(),
 			Password = (model.MatKhau ?? string.Empty).ToMd5Hash(Utils.GenerateRandomKey()),
 			IsActive = true,
@@ -39,24 +39,23 @@ public class CustomerService : ICustomerService
 		};
 		user.Password = (model.MatKhau ?? string.Empty).ToMd5Hash(user.RandomKey);
 
-		await _db.Users.AddAsync(user, cancellationToken);
+		await _db.AppUsers.AddAsync(user, cancellationToken);
 		await _db.SaveChangesAsync(cancellationToken);
 
 		var customer = new Customer
 		{
-			CustomerId = model.TenDangNhap,
 			UserId = user.Id,
-			FullName = model.HoTen,
-			Sex = model.GioiTinh,
-			BirthDate = model.NgaySinh ?? DateOnly.MinValue,
+			Fullname = model.HoTen,
+			Gender = model.GioiTinh,
+			Birthday = model.NgaySinh ?? DateOnly.MinValue,
 			Address = model.DiaChi,
-			PhoneNumber = model.DienThoai,
+			Phone = model.DienThoai,
 			Email = model.Email
 		};
 
 		if (image != null)
 		{
-			customer.Image = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_CUSTOMER);
+			customer.Avatar = await _cloudinaryService.UploadImageAsync(image, Constants.FOLDER_CLOUDINARY_CUSTOMER);
 		}
 
 		await _db.Customers.AddAsync(customer, cancellationToken);
@@ -66,7 +65,7 @@ public class CustomerService : ICustomerService
 
 	public async Task<LoginResult> LoginAsync(DangNhapRequest model, string? returnUrl, CancellationToken cancellationToken = default)
 	{
-		var user = await _db.Users.SingleOrDefaultAsync(u => u.Username == model.Username, cancellationToken);
+		var user = await _db.AppUsers.SingleOrDefaultAsync(u => u.Username == model.Username, cancellationToken);
 		if (user == null)
 		{
 			return new LoginResult { Success = false, Message = "Invalid username or password" };
@@ -82,7 +81,7 @@ public class CustomerService : ICustomerService
 			return new LoginResult { Success = false, Message = "Invalid username or password" };
 		}
 
-		var customer = await _db.Customers.FirstOrDefaultAsync(c => c.CustomerId == user.Username, cancellationToken);
+		var customer = await _db.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id, cancellationToken);
 		if (customer == null)
 		{
 			return new LoginResult { Success = false, Message = "User profile not found" };
@@ -90,11 +89,11 @@ public class CustomerService : ICustomerService
 
 		var claims = new List<Claim>
 		{
-			new(ClaimTypes.Email, customer.Email),
-			new(ClaimTypes.Name, customer.FullName),
-			new(Constants.CLAIM_CUSTOMERID, customer.CustomerId),
-			new(ClaimTypes.Role, user.Role.ToString()),
-			new("Avatar", customer.Image ?? string.Empty)
+			new Claim(ClaimTypes.Email, customer.Email),
+			new Claim(ClaimTypes.Name, customer.Fullname),
+			new Claim(Constants.CLAIM_CUSTOMERID, user.Role == 0 ? customer.Id.ToString() : user.Id.ToString()),
+			new Claim(ClaimTypes.Role, user.Role.ToString()),
+			new Claim("Avatar", customer.Avatar ?? string.Empty)
 		};
 
 		var redirectUrl = !string.IsNullOrWhiteSpace(returnUrl) && Uri.IsWellFormedUriString(returnUrl, UriKind.Relative)

@@ -22,10 +22,10 @@ public static class UIConstants
         public const string VisitStore = "Visit Store";
         public const string Wishlist = "Wishlist";
         public const string Menu = "Menu";
-        public const string Account = "Tai khoan";
-        public const string Login = "Dang nhap";
-        public const string Register = "Dang ky";
-        public const string Logout = "Dang xuat";
+        public const string Account = "Account";
+        public const string Login = "Login";
+        public const string Register = "Register";
+        public const string Logout = "Logout";
     }
 
     public static class Auth
@@ -35,9 +35,9 @@ public static class UIConstants
         public const string LoginButton = "Login";
         public const string RegisterButton = "Register";
         public const string ForgotPasswordButton = "Forgot Password";
-        public const string Gender = "Gioi tinh";
-        public const string Male = "Nam";
-        public const string Female = "Nu";
+        public const string Gender = "Gender";
+        public const string Male = "Male";
+        public const string Female = "Female";
         public const string ImageLabel = "Image";
     }
 
@@ -49,7 +49,7 @@ public static class UIConstants
         public const string ViewDetails = "View Details";
         public const string NewBadge = "NEW";
         public const string RelatedProducts = "Related Products";
-        public const string Qty = "Qty";
+        public const string Qty = "Quantity";
     }
 
     public static class Cart

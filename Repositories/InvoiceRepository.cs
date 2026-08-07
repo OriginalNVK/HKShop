@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using Microsoft.EntityFrameworkCore;
 using HKShop.Repositories.Interfaces;
 
@@ -6,9 +6,9 @@ namespace HKShop.Repositories;
 
 public class InvoiceRepository : IInvoiceRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public InvoiceRepository(DBContext context)
+	public InvoiceRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
@@ -17,8 +17,8 @@ public class InvoiceRepository : IInvoiceRepository
 	{
 		return await _context.Invoices
 			.AsNoTracking()
-			.Include(i => i.CustomerIdNavigation)
-			.Include(i => i.AdminIdNavigation)
+			.Include(i => i.Customer)
+			.Include(i => i.Employee)
 			.OrderByDescending(i => i.OrderDate)
 			.ToListAsync(cancellationToken);
 	}
@@ -26,14 +26,14 @@ public class InvoiceRepository : IInvoiceRepository
 	public async Task<Invoice?> GetByIdAsync(int invoiceId, CancellationToken cancellationToken = default)
 	{
 		return await _context.Invoices
-			.Include(i => i.CustomerIdNavigation)
-			.Include(i => i.AdminIdNavigation)
+			.Include(i => i.Customer)
+			.Include(i => i.Employee)
 			.Include(i => i.DetailInvoices)
-				.ThenInclude(d => d.ProductIdNavigation)
-			.FirstOrDefaultAsync(i => i.InvoiceId == invoiceId, cancellationToken);
+				.ThenInclude(d => d.Product)
+			.FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
 	}
 
-	public async Task<List<Invoice>> GetByCustomerIdAsync(string customerId, CancellationToken cancellationToken = default)
+		public async Task<List<Invoice>> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
 	{
 		return await _context.Invoices
 			.AsNoTracking()
@@ -51,35 +51,35 @@ public class InvoiceRepository : IInvoiceRepository
 
 	public async Task<bool> UpdateStatusAsync(int invoiceId, int statusCode, DateOnly? deliveryDate = null, CancellationToken cancellationToken = default)
 	{
-		var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.InvoiceId == invoiceId, cancellationToken);
+		var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
 		if (invoice == null)
 		{
 			return false;
 		}
 
-		invoice.StatusCode = statusCode;
-		invoice.DeliveryDate = deliveryDate;
+		invoice.StatusId = statusCode;
+		invoice.ShipmentDate = deliveryDate;
 
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
 	}
 
-	public async Task<bool> AssignAdminAsync(int invoiceId, string adminId, CancellationToken cancellationToken = default)
+	public async Task<bool> AssignAdminAsync(int invoiceId, int employeeId, CancellationToken cancellationToken = default)
 	{
-		var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.InvoiceId == invoiceId, cancellationToken);
+		var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
 		if (invoice == null)
 		{
 			return false;
 		}
 
-		invoice.AdminId = adminId;
+		invoice.EmployeeId = employeeId;
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
 	}
 
 	public async Task<bool> DeleteAsync(int invoiceId, CancellationToken cancellationToken = default)
 	{
-		var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.InvoiceId == invoiceId, cancellationToken);
+		var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
 		if (invoice == null)
 		{
 			return false;

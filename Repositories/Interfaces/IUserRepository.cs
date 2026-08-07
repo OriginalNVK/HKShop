@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 
 namespace HKShop.Repositories.Interfaces;
 
@@ -10,7 +10,7 @@ public interface IUserRepository
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns>List of users</returns>
-	public Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default);
+    public Task<List<AppUser>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a user by their unique identifier. 
@@ -19,7 +19,7 @@ public interface IUserRepository
     /// <param name="userId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>User or null if not found</returns>
-	public Task<User?> GetByIdAsync(int userId, CancellationToken cancellationToken = default);
+    public Task<AppUser?> GetByIdAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a user by their username. 
@@ -28,7 +28,7 @@ public interface IUserRepository
     /// <param name="username"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>User or null if not found</returns>
-	public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+    public Task<AppUser?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Check if a username already exists in the system. 
@@ -37,7 +37,7 @@ public interface IUserRepository
     /// <param name="username"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>True if the username exists, false otherwise</returns>
-	public Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default);
+    public Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Create a new user in the database. This method adds a new user record to the database,
@@ -46,7 +46,7 @@ public interface IUserRepository
     /// <param name="user"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>The created user</returns>
-	public Task<User> CreateAsync(User user, CancellationToken cancellationToken = default);
+    public Task<AppUser> CreateAsync(AppUser user, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Update an existing user's information. 
@@ -55,7 +55,7 @@ public interface IUserRepository
     /// <param name="user"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>True if the update was successful, false otherwise</returns>
-	public Task<bool> UpdateAsync(User user, CancellationToken cancellationToken = default);
+    public Task<bool> UpdateAsync(AppUser user, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete a user from the database. 

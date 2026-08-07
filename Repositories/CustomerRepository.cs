@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,9 +6,9 @@ namespace HKShop.Repositories;
 
 public class CustomerRepository : ICustomerRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public CustomerRepository(DBContext context)
+	public CustomerRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
@@ -18,7 +18,7 @@ public class CustomerRepository : ICustomerRepository
 		return await _context.Customers
 			.AsNoTracking()
 			.Include(c => c.User)
-			.OrderBy(c => c.CustomerId)
+			.OrderBy(c => c.Id)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -26,16 +26,16 @@ public class CustomerRepository : ICustomerRepository
 	{
 		return await _context.Customers
 			.Include(c => c.User)
-			.FirstOrDefaultAsync(c => c.CustomerId == username, cancellationToken);
+			.FirstOrDefaultAsync(c => c.User.Username == username, cancellationToken);
 	}
 
-	public async Task<Customer?> GetByIdAsync(string customerId, CancellationToken cancellationToken = default)
+		public async Task<Customer?> GetByIdAsync(int customerId, CancellationToken cancellationToken = default)
 	{
 		return await _context.Customers
 			.Include(c => c.User)
 			.Include(c => c.Carts)
 			.Include(c => c.Invoices)
-			.FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
+				.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
 	}
 
 	public async Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
@@ -54,28 +54,28 @@ public class CustomerRepository : ICustomerRepository
 
 	public async Task<bool> UpdateAsync(Customer customer, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId, cancellationToken);
+		var existing = await _context.Customers.FirstOrDefaultAsync(c => c.Id == customer.Id, cancellationToken);
 		if (existing == null)
 		{
 			return false;
 		}
 
-		existing.FullName = customer.FullName;
-		existing.Sex = customer.Sex;
-		existing.BirthDate = customer.BirthDate;
+		existing.Fullname = customer.Fullname;
+		existing.Gender = customer.Gender;
+		existing.Birthday = customer.Birthday;
 		existing.Address = customer.Address;
-		existing.PhoneNumber = customer.PhoneNumber;
+		existing.Phone = customer.Phone;
 		existing.Email = customer.Email;
-		existing.Image = customer.Image;
+		existing.Avatar = customer.Avatar;
 		existing.UserId = customer.UserId;
 
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
 	}
 
-	public async Task<bool> DeleteAsync(string customerId, CancellationToken cancellationToken = default)
+	public async Task<bool> DeleteAsync(int customerId, CancellationToken cancellationToken = default)
 	{
-		var customer = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
+		var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
 		if (customer == null)
 		{
 			return false;

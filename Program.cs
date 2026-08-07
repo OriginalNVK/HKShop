@@ -1,5 +1,5 @@
+using HKShop.Domain;
 using HKShop.Helpers;
-using HKShop.Models;
 using HKShop.Repositories;
 using HKShop.Repositories.Interfaces;
 using HKShop.Services;
@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<DBContext>(options =>
+builder.Services.AddDbContext<HKShopDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("HKShop")));
 
 // Cấu hình Authentication với JWT
@@ -48,7 +48,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<IGenerateToken, GenerateToken>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();

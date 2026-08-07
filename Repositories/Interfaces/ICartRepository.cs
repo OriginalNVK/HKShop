@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 
 namespace HKShop.Repositories.Interfaces;
 
@@ -12,7 +12,7 @@ public interface ICartRepository
     /// <param name="customerId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>List of cart items</returns>
-    public Task<List<Cart>> GetByCustomerIdAsync(string customerId, CancellationToken cancellationToken = default);
+    public Task<List<DetailCart>> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a specific cart item for a customer by product ID.
@@ -22,7 +22,7 @@ public interface ICartRepository
     /// <param name="productId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>Get the cart item or null if not found</returns>
-	public Task<Cart?> GetItemAsync(string customerId, int productId, CancellationToken cancellationToken = default);
+    public Task<DetailCart?> GetItemAsync(int customerId, int productId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Add a new item to the cart or update the quantity if the item already exists.
@@ -33,7 +33,7 @@ public interface ICartRepository
     /// <param name="quantity"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>The updated or added cart item, or null if unsuccessful</returns>
-	public Task<Cart?> AddOrUpdateItemAsync(string customerId, int productId, int quantity, CancellationToken cancellationToken = default);
+    public Task<DetailCart?> AddOrUpdateItemAsync(int customerId, int productId, int quantity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Update the quantity of an existing cart item. If the specified quantity is zero or negative, 
@@ -44,7 +44,7 @@ public interface ICartRepository
     /// <param name="quantity"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>True if the quantity was updated successfully, false otherwise</returns>
-	public Task<bool> UpdateQuantityAsync(string customerId, int productId, int quantity, CancellationToken cancellationToken = default);
+    public Task<bool> UpdateQuantityAsync(int customerId, int productId, int quantity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Remove an item from the cart based on the customer ID and product ID.
@@ -53,7 +53,7 @@ public interface ICartRepository
     /// <param name="productId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>True if the item was removed successfully, false otherwise</returns>
-	public Task<bool> RemoveItemAsync(string customerId, int productId, CancellationToken cancellationToken = default);
+    public Task<bool> RemoveItemAsync(int customerId, int productId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clear all items from a customer's cart. 
@@ -62,7 +62,7 @@ public interface ICartRepository
     /// <param name="customerId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>The number of items removed</returns>
-	public Task<int> ClearCartAsync(string customerId, CancellationToken cancellationToken = default);
+    public Task<int> ClearCartAsync(int customerId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Calculate the total cost of all items in a customer's cart. 
@@ -72,5 +72,5 @@ public interface ICartRepository
     /// <param name="customerId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>Get the total cost of the cart</returns>
-	public Task<decimal> GetCartTotalAsync(string customerId, CancellationToken cancellationToken = default);
+	// public Task<decimal> GetCartTotalAsync(int customerId, CancellationToken cancellationToken = default);
 }

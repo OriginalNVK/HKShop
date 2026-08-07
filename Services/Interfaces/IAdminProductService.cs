@@ -1,5 +1,5 @@
 using HKShop.DTOs;
-using HKShop.Models;
+using HKShop.Domain;
 
 namespace HKShop.Services.Interfaces;
 

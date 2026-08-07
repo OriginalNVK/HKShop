@@ -1,6 +1,6 @@
 using HKShop.DTOs;
 using HKShop.Helpers;
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +8,10 @@ namespace HKShop.Services;
 
 public class AdminProductService : IAdminProductService
 {
-	private readonly DBContext _db;
+	private readonly HKShopDbContext _db;
 	private readonly ICloudinaryService _cloudinaryService;
 
-	public AdminProductService(DBContext db, ICloudinaryService cloudinaryService)
+	public AdminProductService(HKShopDbContext db, ICloudinaryService cloudinaryService)
 	{
 		_db = db;
 		_cloudinaryService = cloudinaryService;
@@ -22,7 +22,7 @@ public class AdminProductService : IAdminProductService
 		var product = await _db.Products
 			.AsNoTracking()
 			.Include(p => p.Category)
-			.FirstOrDefaultAsync(p => p.ProductId == id, cancellationToken);
+			.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
 		if (product == null)
 		{
@@ -31,36 +31,36 @@ public class AdminProductService : IAdminProductService
 
 		return new ProductsResponse
 		{
-			MaHh = product.ProductId,
-			TenHh = product.ProductName,
-			TenAlias = product.AliasName,
-			MaLoai = product.CategoryId,
-			MoTaDonVi = product.Description,
-			DonGia = product.Price,
-			Hinh = product.Image,
-			NgaySx = product.CreatedAt,
-			GiamGia = product.Discount,
-			LuotMua = product.Views,
-			MoTa = product.Description,
-			MaLoaiNavigation = product.Category
+			ProductId = product.Id,
+			ProductName = product.Name,
+			AliasName = null,
+			CategoryId = product.CategoryId,
+			UnitDescription = product.UnitDescription,
+			Price = product.UnitPrice,
+			ImageUrl = product.Image,
+			ManufactureDate = DateOnly.FromDateTime(product.CreatedDate),
+			Discount = product.Discount,
+			Views = product.Views,
+			Description = product.Description,
+			Category = product.Category
 		};
 	}
 
 	public async Task<List<Category>> GetCategoriesAsync(CancellationToken cancellationToken = default)
 	{
-		return await _db.Categories.AsNoTracking().OrderBy(c => c.CategoryName).ToListAsync(cancellationToken);
+		return await _db.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync(cancellationToken);
 	}
 
 	public async Task<ServiceResult> CreateAsync(ProductsRequest request, IFormFile? image, CancellationToken cancellationToken = default)
 	{
 		var product = new Product
 		{
-			ProductName = request.TenHh,
-			AliasName = request.TenAlias,
+			Name = request.TenHh,
 			CategoryId = request.MaLoai ?? 0,
-			Description = request.MoTa ?? request.MoTaDonVi,
-			Price = request.DonGia,
-			CreatedAt = DateOnly.FromDateTime(request.NgaySx),
+			UnitDescription = request.MoTaDonVi,
+			Description = request.MoTa,
+			UnitPrice = request.DonGia,
+			CreatedDate = request.NgaySx,
 			Discount = request.GiamGia ?? 0,
 			Views = request.LuotMua ?? 0
 		};
@@ -84,18 +84,18 @@ public class AdminProductService : IAdminProductService
 
 	public async Task<ServiceResult> UpdateAsync(int id, ProductsRequest request, CancellationToken cancellationToken = default)
 	{
-		var existingProduct = await _db.Products.FirstOrDefaultAsync(p => p.ProductId == id, cancellationToken);
+		var existingProduct = await _db.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 		if (existingProduct == null)
 		{
 			return ServiceResult.Fail("Product not found");
 		}
 
-		existingProduct.ProductName = request.TenHh;
-		existingProduct.AliasName = request.TenAlias;
+		existingProduct.Name = request.TenHh;
 		existingProduct.CategoryId = request.MaLoai ?? 0;
-		existingProduct.Description = request.MoTa ?? request.MoTaDonVi;
-		existingProduct.Price = request.DonGia;
-		existingProduct.CreatedAt = DateOnly.FromDateTime(request.NgaySx);
+		existingProduct.UnitDescription = request.MoTaDonVi;
+		existingProduct.Description = request.MoTa;
+		existingProduct.UnitPrice = request.DonGia;
+		existingProduct.CreatedDate = request.NgaySx;
 		existingProduct.Discount = request.GiamGia ?? 0;
 		existingProduct.Views = request.LuotMua ?? 0;
 

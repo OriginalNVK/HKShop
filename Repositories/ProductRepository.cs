@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using Microsoft.EntityFrameworkCore;
 using HKShop.Repositories.Interfaces;
 
@@ -6,9 +6,9 @@ namespace HKShop.Repositories;
 
 public class ProductRepository : IProductRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public ProductRepository(DBContext context)
+	public ProductRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
@@ -18,7 +18,7 @@ public class ProductRepository : IProductRepository
 		return await _context.Products
 			.AsNoTracking()
 			.Include(p => p.Category)
-			.OrderByDescending(p => p.ProductId)
+			.OrderByDescending(p => p.Id)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -36,11 +36,11 @@ public class ProductRepository : IProductRepository
 
 		if (!string.IsNullOrWhiteSpace(keyword))
 		{
-			query = query.Where(p => p.ProductName.Contains(keyword) || (p.AliasName != null && p.AliasName.Contains(keyword)));
+			query = query.Where(p => p.Name.Contains(keyword) || (p.Description != null && p.Description.Contains(keyword)));
 		}
 
 		return await query
-			.OrderByDescending(p => p.ProductId)
+			.OrderByDescending(p => p.Id)
 			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
 			.ToListAsync(cancellationToken);
@@ -50,7 +50,7 @@ public class ProductRepository : IProductRepository
 	{
 		return await _context.Products
 			.Include(p => p.Category)
-			.FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
+			.FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
 	}
 
 	public async Task<Product> CreateAsync(Product product, CancellationToken cancellationToken = default)
@@ -62,19 +62,19 @@ public class ProductRepository : IProductRepository
 
 	public async Task<bool> UpdateAsync(Product product, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == product.ProductId, cancellationToken);
+		var existing = await _context.Products.FirstOrDefaultAsync(p => p.Id == product.Id, cancellationToken);
 		if (existing == null)
 		{
 			return false;
 		}
 
-		existing.ProductName = product.ProductName;
-		existing.AliasName = product.AliasName;
+		existing.Name = product.Name;
 		existing.CategoryId = product.CategoryId;
+		existing.UnitDescription = product.UnitDescription;
 		existing.Description = product.Description;
-		existing.Price = product.Price;
+		existing.UnitPrice = product.UnitPrice;
 		existing.Image = product.Image;
-		existing.CreatedAt = product.CreatedAt;
+		existing.CreatedDate = product.CreatedDate;
 		existing.Discount = product.Discount;
 		existing.Views = product.Views;
 
@@ -84,7 +84,7 @@ public class ProductRepository : IProductRepository
 
 	public async Task<bool> DeleteAsync(int productId, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
+		var existing = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
 		if (existing == null)
 		{
 			return false;

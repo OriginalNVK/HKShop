@@ -1,5 +1,5 @@
 using HKShop.DTOs;
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +7,9 @@ namespace HKShop.Services;
 
 public class AdminOrderService : IAdminOrderService
 {
-	private readonly DBContext _db;
+	private readonly HKShopDbContext _db;
 
-	public AdminOrderService(DBContext db)
+	public AdminOrderService(HKShopDbContext db)
 	{
 		_db = db;
 	}
@@ -18,26 +18,26 @@ public class AdminOrderService : IAdminOrderService
 	{
 		return await _db.DetailInvoices
 			.AsNoTracking()
-			.Include(d => d.ProductIdNavigation)
+			.Include(d => d.Product)
 			.Where(d => d.InvoiceId == invoiceId)
 			.Select(d => new DetailInvoiceVM
 			{
-				MaCt = d.DetailInvoiceId,
-				MaHd = d.InvoiceId,
-				MaHh = d.ProductId,
-				DonGia = d.Amount,
-				SoLuong = d.Quantity,
-				GiamGia = d.Discount,
-				TenHangHoa = d.ProductIdNavigation.ProductName,
-				Hinh = d.ProductIdNavigation.Image ?? string.Empty,
-				ThanhTien = d.Amount * d.Quantity
+				DetailInvoiceId = d.Id,
+				InvoiceId = d.InvoiceId,
+				ProductId = d.ProductId,
+				Price = d.SubPrice,
+				Quantity = d.Quantity,
+				Discount = 0,
+				ProductName = d.Product.Name,
+				ProductImage = d.Product.Image ?? string.Empty,
+				TotalAmount = d.SubPrice
 			})
 			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<ServiceResult> DeleteAsync(int invoiceId, CancellationToken cancellationToken = default)
 	{
-		var invoice = await _db.Invoices.FirstOrDefaultAsync(h => h.InvoiceId == invoiceId, cancellationToken);
+		var invoice = await _db.Invoices.FirstOrDefaultAsync(h => h.Id == invoiceId, cancellationToken);
 		if (invoice == null)
 		{
 			return ServiceResult.Fail("Order not found");
@@ -60,15 +60,22 @@ public class AdminOrderService : IAdminOrderService
 		await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 		try
 		{
-			var invoice = await _db.Invoices.SingleOrDefaultAsync(h => h.InvoiceId == invoiceId, cancellationToken);
+			var invoice = await _db.Invoices.SingleOrDefaultAsync(h => h.Id == invoiceId, cancellationToken);
 			if (invoice == null)
 			{
 				return ServiceResult.Fail("Order not found");
 			}
 
-			invoice.DeliveryDate = DateOnly.FromDateTime(deliveryDate);
-			invoice.StatusCode = 2;
-			invoice.AdminId = adminId;
+			invoice.ShipmentDate = DateOnly.FromDateTime(deliveryDate);
+			invoice.StatusId = 2;
+			if (int.TryParse(adminId, out var userId))
+			{
+				var employee = await _db.Employees.FirstOrDefaultAsync(e => e.UserId == userId, cancellationToken);
+				if (employee != null)
+				{
+					invoice.EmployeeId = employee.Id;
+				}
+			}
 
 			await _db.SaveChangesAsync(cancellationToken);
 			await transaction.CommitAsync(cancellationToken);

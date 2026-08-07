@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,9 +6,9 @@ namespace HKShop.Repositories;
 
 public class DetailInvoiceRepository : IDetailInvoiceRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public DetailInvoiceRepository(DBContext context)
+	public DetailInvoiceRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
@@ -17,7 +17,7 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 	{
 		return await _context.DetailInvoices
 			.AsNoTracking()
-			.Include(d => d.ProductIdNavigation)
+			.Include(d => d.Product)
 			.Where(d => d.InvoiceId == invoiceId)
 			.ToListAsync(cancellationToken);
 	}
@@ -25,9 +25,9 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 	public async Task<DetailInvoice?> GetByIdAsync(int detailInvoiceId, CancellationToken cancellationToken = default)
 	{
 		return await _context.DetailInvoices
-			.Include(d => d.ProductIdNavigation)
-			.Include(d => d.InvoiceIdNavigation)
-			.FirstOrDefaultAsync(d => d.DetailInvoiceId == detailInvoiceId, cancellationToken);
+			.Include(d => d.Product)
+			.Include(d => d.Invoice)
+			.FirstOrDefaultAsync(d => d.Id == detailInvoiceId, cancellationToken);
 	}
 
 	public async Task<DetailInvoice> CreateAsync(DetailInvoice detail, CancellationToken cancellationToken = default)
@@ -39,7 +39,7 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 
 	public async Task<bool> UpdateAsync(DetailInvoice detail, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.DetailInvoices.FirstOrDefaultAsync(d => d.DetailInvoiceId == detail.DetailInvoiceId, cancellationToken);
+		var existing = await _context.DetailInvoices.FirstOrDefaultAsync(d => d.Id == detail.Id, cancellationToken);
 		if (existing == null)
 		{
 			return false;
@@ -47,9 +47,8 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 
 		existing.InvoiceId = detail.InvoiceId;
 		existing.ProductId = detail.ProductId;
-		existing.Amount = detail.Amount;
+		existing.SubPrice = detail.SubPrice;
 		existing.Quantity = detail.Quantity;
-		existing.Discount = detail.Discount;
 
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
@@ -57,7 +56,7 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 
 	public async Task<bool> DeleteAsync(int detailInvoiceId, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.DetailInvoices.FirstOrDefaultAsync(d => d.DetailInvoiceId == detailInvoiceId, cancellationToken);
+		var existing = await _context.DetailInvoices.FirstOrDefaultAsync(d => d.Id == detailInvoiceId, cancellationToken);
 		if (existing == null)
 		{
 			return false;
@@ -78,6 +77,6 @@ public class DetailInvoiceRepository : IDetailInvoiceRepository
 		return await _context.DetailInvoices
 			.AsNoTracking()
 			.Where(d => d.InvoiceId == invoiceId)
-			.SumAsync(d => d.Amount * d.Quantity * (1m - d.Discount / 100m), cancellationToken);
+			.SumAsync(d => d.SubPrice, cancellationToken);
 	}
 }

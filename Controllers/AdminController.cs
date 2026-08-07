@@ -1,8 +1,6 @@
-﻿using HKShop.Models;
-using HKShop.DTOs;
+﻿using HKShop.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using HKShop.Services.Interfaces;
 
 namespace HKShop.Controllers

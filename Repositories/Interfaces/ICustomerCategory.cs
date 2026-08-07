@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 
 namespace HKShop.Repositories.Interfaces;
 
@@ -12,7 +12,7 @@ public interface ICustomerRepository
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns>Get list of customers</returns>
-	public Task<List<Customer>> GetAllAsync(CancellationToken cancellationToken = default);
+    public Task<List<Customer>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a specific customer by their unique username. 
@@ -21,7 +21,9 @@ public interface ICustomerRepository
     /// <param name="username"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>Customer or null if not found</returns>
-	public Task<Customer?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+    public Task<Customer?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+
+    public Task<Customer?> GetByIdAsync(int customerId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Create a new customer in the database. This method adds a new customer record,
@@ -47,5 +49,5 @@ public interface ICustomerRepository
     /// <param name="customerId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>True if the customer was deleted successfully, false otherwise</returns>
-	public Task<bool> DeleteAsync(string customerId, CancellationToken cancellationToken = default);
+    public Task<bool> DeleteAsync(int customerId, CancellationToken cancellationToken = default);
 }

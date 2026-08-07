@@ -4,12 +4,12 @@ using HKShop.Repositories.Interfaces;
 
 namespace HKShop.ViewComponents
 {
-    public class LoaiViewComponent : ViewComponent
+    public class CategoryViewComponent : ViewComponent
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IProductRepository _productRepository;
 
-        public LoaiViewComponent(ICategoryRepository categoryRepository, IProductRepository productRepository)
+        public CategoryViewComponent(ICategoryRepository categoryRepository, IProductRepository productRepository)
         {
             _categoryRepository = categoryRepository;
             _productRepository = productRepository;
@@ -27,11 +27,10 @@ namespace HKShop.ViewComponents
             var data = categories
                 .Select(l => new CategoryMenuDto
                 {
-                    CategoryId = l.CategoryId,
-                    CategoryName = l.CategoryName,
-                    ProductCount = productCounts.GetValueOrDefault(l.CategoryId, 0)
+                    CategoryId = l.Id,
+                    CategoryName = l.Name,
+                    ProductCount = productCounts.GetValueOrDefault(l.Id, 0)
                 })
-                .OrderBy(p => p.CategoryName)
                 .ToList();
 
             return View(data);

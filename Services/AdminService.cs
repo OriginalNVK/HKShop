@@ -1,5 +1,5 @@
 using HKShop.DTOs;
-using HKShop.Models;
+using HKShop.Domain;
 using HKShop.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +7,9 @@ namespace HKShop.Services;
 
 public class AdminService : IAdminService
 {
-	private readonly DBContext _db;
+	private readonly HKShopDbContext _db;
 
-	public AdminService(DBContext db)
+	public AdminService(HKShopDbContext db)
 	{
 		_db = db;
 	}
@@ -20,9 +20,9 @@ public class AdminService : IAdminService
 		var startCustomer = endDate.AddDays(-6);
 		var startOrder = endDate.AddDays(-13);
 
-		var customerRaw = await _db.Users
-			.Where(u => u.Role == 0 && u.CreatedAt.Date >= startCustomer && u.CreatedAt.Date <= endDate)
-			.GroupBy(u => u.CreatedAt.Date)
+		var customerRaw = await _db.AppUsers
+			.Where(u => u.Role == 0 && u.CreatedDate.Date >= startCustomer && u.CreatedDate.Date <= endDate)
+			.GroupBy(u => u.CreatedDate.Date)
 			.Select(g => new { Date = g.Key, Amount = g.Count() })
 			.ToListAsync(cancellationToken);
 
@@ -65,15 +65,15 @@ public class AdminService : IAdminService
 			.OrderByDescending(i => i.OrderDate)
 			.Select(i => new InvoiceResponse
 			{
-				MaHd = i.InvoiceId,
-				HoTen = i.CustomerName ?? string.Empty,
+				InvoiceId = i.Id,
+				CustomerName = i.ReceiverName ?? string.Empty,
 				NgayDat = i.OrderDate,
 				DiaChi = i.Address,
-				CachThanhToan = i.PaymentMethod,
-				CachVanChuyen = i.ShippingMethod,
-				TrangThai = MapInvoiceStatus(i.StatusCode),
-				GhiChu = i.Notes ?? string.Empty,
-				DienThoai = i.PhoneNumber
+				PaymentMethod = i.PaymentMethod,
+				ShippingMethod = i.ShippingMethod,
+				Status = MapInvoiceStatus(i.StatusId),
+				Notes = i.Note ?? string.Empty,
+				PhoneNumber = i.PhoneNumber
 			})
 			.ToListAsync(cancellationToken);
 	}
@@ -93,31 +93,31 @@ public class AdminService : IAdminService
 		var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
 		var products = await query
-			.OrderByDescending(p => p.ProductId)
+			.OrderByDescending(p => p.Id)
 			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
 			.Select(p => new HangHoaResponse
 			{
-				MaHh = p.ProductId,
-				TenHH = p.ProductName,
-				DonGia = p.Price ?? 0,
-				Hinh = p.Image ?? string.Empty,
-				MoTaNgan = p.Description ?? string.Empty,
-				TenLoai = p.Category.CategoryName,
-				GiamGia = p.Discount
+				ProductId = p.Id,
+				ProductName = p.Name,
+				Price = p.UnitPrice ?? 0,
+				ImageUrl = p.Image ?? string.Empty,
+				ShortDescription = p.Description ?? string.Empty,
+				CategoryName = p.Category.Name,
+				Discount = p.Discount
 			})
 			.ToListAsync(cancellationToken);
 
 		var categories = await _db.Categories
 			.AsNoTracking()
-			.OrderBy(c => c.CategoryName)
+			.OrderBy(c => c.Name)
 			.Select(c => new CategoryResponse
 			{
-				MaLoai = c.CategoryId,
-				TenLoai = c.CategoryName,
-				TenLoaiAlias = c.CategoryAlias,
-				MoTa = c.Description,
-				Hinh = c.Image
+				CategoryId = c.Id,
+				CategoryName = c.Name,
+				CategoryAlias = null,
+				Description = c.Description,
+				ImageUrl = c.Image
 			})
 			.ToListAsync(cancellationToken);
 
@@ -144,24 +144,24 @@ public class AdminService : IAdminService
 		var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
 		var clients = await query
-			.OrderBy(c => c.FullName)
+			.OrderBy(c => c.Fullname)
 			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
 			.Select(c => new ClientResponse
 			{
-				MaKH = c.CustomerId,
-				HoTen = c.FullName,
-				GioiTinh = c.Sex,
-				NgaySinh = c.BirthDate,
-				DiaChi = c.Address,
-				DienThoai = c.PhoneNumber,
+				CustomerId = c.Id.ToString(),
+				FullName = c.Fullname,
+				Gender = c.Gender,
+				BirthDate = c.Birthday,
+				Address = c.Address,
+				PhoneNumber = c.Phone,
 				Email = c.Email,
-				VaiTro = c.User.Role,
-				Hinh = c.Image
+				Role = c.User.Role,
+				ImageUrl = c.Avatar
 			})
 			.ToListAsync(cancellationToken);
 
-		var roles = await _db.Users
+		var roles = await _db.AppUsers
 			.AsNoTracking()
 			.Select(u => u.Role)
 			.Distinct()
@@ -181,14 +181,14 @@ public class AdminService : IAdminService
 	{
 		return await _db.Categories
 			.AsNoTracking()
-			.OrderBy(c => c.CategoryName)
+			.OrderBy(c => c.Name)
 			.Select(c => new CategoryResponse
 			{
-				MaLoai = c.CategoryId,
-				TenLoai = c.CategoryName,
-				TenLoaiAlias = c.CategoryAlias,
-				MoTa = c.Description,
-				Hinh = c.Image
+				CategoryId = c.Id,
+				CategoryName = c.Name,
+				CategoryAlias = null,
+				Description = c.Description,
+				ImageUrl = c.Image
 			})
 			.ToListAsync(cancellationToken);
 	}

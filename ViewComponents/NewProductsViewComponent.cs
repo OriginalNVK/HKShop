@@ -25,17 +25,17 @@ namespace HKShop.ViewComponents
                 Categories = categories
                     .Select(l => new CategoryProducts
                     {
-                        MaLoai = l.CategoryId,
-                        TenLoai = l.CategoryName,
+                        MaLoai = l.Id,
+                        TenLoai = l.Name,
                         Products = products
-                            .Where(h => h.CategoryId == l.CategoryId)
-                            .OrderByDescending(h => h.CreatedAt)
+                            .Where(h => h.CategoryId == l.Id)
+                            .OrderByDescending(h => h.CreatedDate)
                             .Take(5)
                             .Select(h => new ProductResponseDto
                             {
-                                ProductId = h.ProductId,
-                                ProductName = h.ProductName,
-                                Price = h.Price ?? 0,
+                                ProductId = h.Id,
+                                ProductName = h.Name,
+                                Price = h.UnitPrice ?? 0,
                                 ImageUrl = h.Image ?? "default.png",
                                 Discount = h.Discount
                             })

@@ -1,4 +1,4 @@
-using HKShop.Models;
+using HKShop.Domain;
 using Microsoft.EntityFrameworkCore;
 using HKShop.Repositories.Interfaces;
 
@@ -6,52 +6,51 @@ namespace HKShop.Repositories;
 
 public class UserRepository : IUserRepository
 {
-	private readonly DBContext _context;
+	private readonly HKShopDbContext _context;
 
-	public UserRepository(DBContext context)
+	public UserRepository(HKShopDbContext context)
 	{
 		_context = context;
 	}
 
-	public async Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
+	public async Task<List<AppUser>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
-		return await _context.Users
+		return await _context.AppUsers
 			.AsNoTracking()
-			.OrderByDescending(u => u.CreatedAt)
+			.OrderByDescending(u => u.CreatedDate)
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<User?> GetByIdAsync(int userId, CancellationToken cancellationToken = default)
+	public async Task<AppUser?> GetByIdAsync(int userId, CancellationToken cancellationToken = default)
 	{
-		return await _context.Users
+		return await _context.AppUsers
 			.Include(u => u.Customer)
-			.Include(u => u.Admin)
 			.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 	}
 
-	public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+	public async Task<AppUser?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
 	{
-		return await _context.Users
+		return await _context.AppUsers
 			.FirstOrDefaultAsync(u => u.Username == username, cancellationToken);
 	}
 
 	public async Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default)
 	{
-		return await _context.Users
+		return await _context.AppUsers
 			.AsNoTracking()
 			.AnyAsync(u => u.Username == username, cancellationToken);
 	}
 
-	public async Task<User> CreateAsync(User user, CancellationToken cancellationToken = default)
+	public async Task<AppUser> CreateAsync(AppUser user, CancellationToken cancellationToken = default)
 	{
-		await _context.Users.AddAsync(user, cancellationToken);
+		await _context.AppUsers.AddAsync(user, cancellationToken);
 		await _context.SaveChangesAsync(cancellationToken);
 		return user;
 	}
 
-	public async Task<bool> UpdateAsync(User user, CancellationToken cancellationToken = default)
+	public async Task<bool> UpdateAsync(AppUser user, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
+		var existing = await _context.AppUsers.FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
 		if (existing == null)
 		{
 			return false;
@@ -69,13 +68,13 @@ public class UserRepository : IUserRepository
 
 	public async Task<bool> DeleteAsync(int userId, CancellationToken cancellationToken = default)
 	{
-		var existing = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+		var existing = await _context.AppUsers.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 		if (existing == null)
 		{
 			return false;
 		}
 
-		_context.Users.Remove(existing);
+		_context.AppUsers.Remove(existing);
 		await _context.SaveChangesAsync(cancellationToken);
 		return true;
 	}
